@@ -4,20 +4,21 @@ from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date, datetime
+from sqlalchemy.dialects.postgresql import UUID
 
 
 
 from app.core.db import db
 from app.utils.kernel import validate_password, format_elapsed_time
+from app.models.base import BaseModel
 from datetime import datetime
 
 
 roles_users = db.Table('roles_users',
-                            db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
-                            db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
+                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+                            db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class User(UserMixin, BaseModel):
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
     name = db.Column(db.String(512), index=True, nullable=False)
     email = db.Column(db.String(128), index=True, unique=True, nullable=False)
@@ -27,9 +28,8 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow())
     location = db.Column(db.String(128), nullable=True)
     active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow())
-    created_network_id = db.Column(db.Integer, db.ForeignKey('network.id'), nullable=False)
-    confirmed_network_id = db.Column(db.Integer, db.ForeignKey('network.id'))
+    created_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
     confirmed_at = db.Column(db.DateTime, nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
     roles = db.relationship('Role', 
@@ -168,8 +168,8 @@ class User(UserMixin, db.Model):
     def query_by_interval(start : date, end: date):
         return User.query.filter(cast(User.created_at, Date) == start, cast(User.created_at, Date) == end)
 
-class Role(RoleMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class Role(RoleMixin, BaseModel):
+    __metaclass__ = db.Model
     level = db.Column(db.Integer, unique=False, nullable=False)
     name = db.Column(db.String(128), nullable=False, unique=True)
     description = db.Column(db.String(255), nullable=True)
@@ -225,9 +225,7 @@ class Role(RoleMixin, db.Model):
         return f'<Role {self.name}>'
 
 
-class LoginSession(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    datetime = db.Column(db.DateTime, default=datetime.utcnow())
+class LoginSession(BaseModel):
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     location = db.Column(db.String(128), nullable=True)
-    network_id = db.Column(db.Integer, db.ForeignKey('network.id'))
+    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))

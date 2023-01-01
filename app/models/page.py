@@ -2,14 +2,15 @@ from flask import current_app as app, flash
 from datetime import date, datetime
 
 from sqlalchemy import Date, asc, cast, extract, func
+from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
+from app.models.base import BaseModel
 from app.models.network import Network
 from app.models.secutiry import User
 from app.utils.kernel import convert_datetime_to_local
 
 
-class Page(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class Page(BaseModel):
     endpoint = db.Column(db.String, unique=True, nullable=False)
     route = db.Column(db.String, unique=True, nullable=False)
     visit = db.relationship('Visit', cascade='all, delete-orphan',
@@ -27,7 +28,7 @@ class Page(db.Model):
         else:
             visit.user_id = user.id
         visit.network_id = network_id
-        visit.datetime = convert_datetime_to_local(datetime.utcnow())
+        visit.datetime = datetime.utcnow()
         db.session.add(visit)
         try:
             db.session.commit()
@@ -39,12 +40,10 @@ class Page(db.Model):
         return visit
 
 
-class Visit(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    page_id = db.Column(db.Integer, db.ForeignKey('page.id'), nullable=False)
-    datetime = db.Column(db.DateTime(timezone=True), nullable=False, default=convert_datetime_to_local(datetime.utcnow()))
-    network_id = db.Column(db.Integer, db.ForeignKey('network.id'), nullable=False)
+class Visit(BaseModel):
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
+    page_id = db.Column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
+    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
 
 
     @staticmethod

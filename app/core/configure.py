@@ -12,6 +12,8 @@ from app.core.extesions import csrf, login, migrate, security
 from app.models.network import Network
 from app.models.page import Page, Visit
 from app.models.secutiry import User, Role
+from app.models.client import Client
+from app.models.contact import Contact
 from app.core.db import db, user_datastore
 
 
@@ -34,7 +36,7 @@ def init(app: Flask):
         ctx = app.test_request_context()
         ctx.push()
 
-        return dict(app=app, db=db, Network=Network, Page=Page, Visit=Visit, User=User, Role=Role)
+        return dict(app=app, db=db, Network=Network, Page=Page, Visit=Visit, User=User, Role=Role, Client=Client, Contact=Contact)
 
     print(f'{"*" * 25} Servidor iniciado: {datetime.utcnow()} {"*" * 25}')
 
@@ -52,7 +54,7 @@ def init(app: Flask):
     @login.user_loader
     def load_user(id):
         try:
-            user = User.query.get(int(id))
+            user = User.query.get(id)
         except Exception as e:
             db.session.rollback()
             app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
