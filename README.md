@@ -14,7 +14,8 @@ Um CRM desenvolvido em Flask
 ### Melhorias futuras:
 
 - [] Criar rotas;
-- [] Modelos de banco de dados - 10%;
+- [] Modelos de banco de dados - 20%;
+- [] Criar aplicação para gestão de reclamações;
 - [] Camada de administração para:
     - [] Administração de usuários (criação, inativação, atualização);
     - [] Gerenciamento de entidades e clientes;
