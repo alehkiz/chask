@@ -19,6 +19,7 @@ roles_users = db.Table('roles_users',
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
 class User(UserMixin, BaseModel):
+    __abstract__ = False
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
     name = db.Column(db.String(512), index=True, nullable=False)
     email = db.Column(db.String(128), index=True, unique=True, nullable=False)
@@ -169,6 +170,7 @@ class User(UserMixin, BaseModel):
         return User.query.filter(cast(User.created_at, Date) == start, cast(User.created_at, Date) == end)
 
 class Role(RoleMixin, BaseModel):
+    __abstract__ = False
     __metaclass__ = db.Model
     level = db.Column(db.Integer, unique=False, nullable=False)
     name = db.Column(db.String(128), nullable=False, unique=True)
@@ -226,6 +228,7 @@ class Role(RoleMixin, BaseModel):
 
 
 class LoginSession(BaseModel):
+    __abstract__ = False
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     location = db.Column(db.String(128), nullable=True)
     network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))

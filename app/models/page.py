@@ -11,6 +11,7 @@ from app.utils.kernel import convert_datetime_to_local
 
 
 class Page(BaseModel):
+    __abstract__ = False
     endpoint = db.Column(db.String, unique=True, nullable=False)
     route = db.Column(db.String, unique=True, nullable=False)
     visit = db.relationship('Visit', cascade='all, delete-orphan',
@@ -41,6 +42,7 @@ class Page(BaseModel):
 
 
 class Visit(BaseModel):
+    __abstract__ = False
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
     page_id = db.Column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
     network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)

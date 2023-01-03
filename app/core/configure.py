@@ -9,12 +9,13 @@ from os import mkdir
 
 from app.blueprints import register_blueprints
 from app.core.extesions import csrf, login, migrate, security
-from app.models.network import Network
-from app.models.page import Page, Visit
-from app.models.secutiry import User, Role
-from app.models.client import Client
-from app.models.contact import Contact
+# from app.models.network import Network
+# from app.models.page import Page, Visit
+
+# from app.models.client import Client
+# from app.models.contact import Contact
 from app.core.db import db, user_datastore
+from app.models import get_class_models #dict of models
 
 
 login.login_view = 'auth.login'
@@ -36,7 +37,7 @@ def init(app: Flask):
         ctx = app.test_request_context()
         ctx.push()
 
-        return dict(app=app, db=db, Network=Network, Page=Page, Visit=Visit, User=User, Role=Role, Client=Client, Contact=Contact)
+        return dict(app=app, db=db, **get_class_models())
 
     print(f'{"*" * 25} Servidor iniciado: {datetime.utcnow()} {"*" * 25}')
 
@@ -54,6 +55,7 @@ def init(app: Flask):
     @login.user_loader
     def load_user(id):
         try:
+            from app.models.secutiry import User
             user = User.query.get(id)
         except Exception as e:
             db.session.rollback()
