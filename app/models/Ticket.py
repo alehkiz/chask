@@ -9,8 +9,9 @@ class Ticket(BaseModel):
     info = db.Column(db.String(1024), index=True, nullable=False)
     deadline = db.Column(db.DateTime, nullable=False)
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
+    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
 
 class TicketType(BaseModel):
     __abstract__ = False
     type = db.Column(db.String(512), index=True, nullable=False, unique=True)
-
+    tickets = db.relationship('Ticket', backref='type', lazy='dynamic', single_parent=True)

@@ -5,7 +5,7 @@ from sys import modules
 from inspect import isclass, getmembers
 from sqlalchemy.sql.schema import Table
 
-def get_class_models():
+def get_class_models(return_str = True):
     '''
     Retur a dictionary with class that is a `DefaultMeta` and not `abstract` class
     '''
@@ -18,3 +18,6 @@ def get_class_models():
                 if class_models.get(class_name, False) is False:
                     class_models[class_name] = obj
     return class_models
+
+def import_class():
+    dic = get_class_models()

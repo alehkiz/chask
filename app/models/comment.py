@@ -14,7 +14,7 @@ class Comment(BaseModel):
     create_network_id=db.Column(
         UUID(as_uuid=True), db.ForeignKey('network.id'), nullable = False)
     update_network_id=db.Column(
-        UUID(as_uuid=True), db.ForeignKey('network.id'), nullable = False)
+        UUID(as_uuid=True), db.ForeignKey('network.id'))
     comment_id = db.Column(UUID(as_uuid=True), db.ForeignKey('comment.id'))
     replies = db.relationship(
         'Comment', 
