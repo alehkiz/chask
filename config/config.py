@@ -5,7 +5,7 @@ import app
 
 class BaseConfig(object):
     PROJECT_NAME = 'chask'
-    SITE_TITLE = PROJECT_NAME
+    SITE_TITLE = PROJECT_NAME + " - CRM"
     SECRET_KEY = environ.get('SERVER_KEY')
     SECURITY_PASSWORD_SALT = environ.get('PASSWORD_SALT')
     APP_DIR = abspath(dirname(app.__file__))
