@@ -59,6 +59,7 @@ def populate_db_command():
         user.username = 'admin'
         user.email = 'admin@localhost'
         user.password = 'Abc123'
+        user.active = True
         user.temp_password = False
         user.created_network_id = network.id
         db.session.add(user)

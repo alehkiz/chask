@@ -21,6 +21,8 @@ from app.models import get_class_models #dict of models
 login.login_view = 'auth.login'
 login.login_message = 'Faça login para acessar a página'
 login.login_message_category = 'danger'
+for k, v in get_class_models().items():
+    globals()[k] = v # Add all models to globals # Force import, to initialize app
 
 def init(app: Flask):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)

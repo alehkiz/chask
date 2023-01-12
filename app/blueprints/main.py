@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, redirect, session, url_for, request, current_app as app, g
+from flask import Blueprint, abort, redirect, render_template, session, url_for, request, current_app as app, g
 from flask_login import login_required
 from flask_security import roles_accepted
 from app.core.db import db
@@ -47,7 +47,7 @@ def teardown_request(exception):
 @bp.route('/index/')
 @counter
 def index():
-    return 'logado'
+    return render_template('base/base.html')
 
 
 @bp.route('/adm/')

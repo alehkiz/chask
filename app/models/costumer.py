@@ -5,8 +5,9 @@ from sqlalchemy.dialects.postgresql import UUID
 class Costumer(BaseModel):
     __abstract__ = False
     name = db.Column(db.String(1024), index=True, nullable=False)
-    identifier = db.Column(db.String(127), index=True, nullable=False, unique=True)
+    identifier = db.Column(db.String(14), index=True, nullable=False, unique=True)
     identifier_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer_identifier_type.id'), nullable=False)
+    location = db.Column(db.String(127), index=True)
     contact_id = db.Column(UUID(as_uuid=True), db.ForeignKey('contact.id'), nullable=False)
 
     

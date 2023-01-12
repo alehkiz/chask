@@ -16,10 +16,9 @@ class Comment(BaseModel):
     update_network_id=db.Column(
         UUID(as_uuid=True), db.ForeignKey('network.id'))
     comment_id = db.Column(UUID(as_uuid=True), db.ForeignKey('comment.id'))
-    replies = db.relationship(
+    replies_to = db.relationship(
         'Comment', 
         remote_side='Comment.id',
         primaryjoin=('comment.c.id==comment.c.comment_id'),
-        backref=db.backref('answer'),#lazy='dynamic'
+        backref=db.backref('answers'),#lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
         )
-
