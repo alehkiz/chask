@@ -9,7 +9,8 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 from app.core.db import db
-from app.utils.kernel import validate_password, format_elapsed_time
+from app.utils.kernel import validate_password
+from app.utils.datetime import format_elapsed_time
 from app.models.base import BaseModel
 from datetime import datetime
 

@@ -7,7 +7,7 @@ from flask import current_app as app
 
 db =SQLAlchemy(session_options={'autoflush':False})
 
-from app.models.secutiry import User, Role
+from app.models.security import User, Role
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
@@ -45,6 +45,7 @@ def populate_db_command():
     if ticket is None:
         ticket = Ticket()
         ticket.name = 'Teste'
+        ticket.title = 'Reclamação'
         ticket.info = 'Apenas um teste sobre ticket'
         ticket.deadline = datetime.now()
         ticket.type_id = ticket_type.id

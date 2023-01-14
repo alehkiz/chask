@@ -3,7 +3,11 @@
 <header class="d-flex justify-content-center py-3">
   <ul class="nav nav-pills">
     <li class="nav-item"><a href="{{url_for('main.index')}}" class="nav-link {{'active' if request.endpoint == 'main.index' else ''}}" aria-current="page">Home</a></li>
+    {% if current_user.is_authenticated %}
+    <li class="nav-item"><a href="{{url_for('auth.logout')}}" class="nav-link {{'active' if request.endpoint == 'auth.login' else ''}}">Logout</a></li>
+    {% else %}
     <li class="nav-item"><a href="{{url_for('auth.login')}}" class="nav-link {{'active' if request.endpoint == 'auth.login' else ''}}">Login</a></li>
+    {% endif %}
     <li class="nav-item"><a href="{{url_for('chat.index')}}" class="nav-link {{'active' if request.endpoint == 'chat.index' else ''}}">Chat</a></li>
   </ul>
 </header>

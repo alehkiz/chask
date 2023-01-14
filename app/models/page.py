@@ -6,8 +6,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
 from app.models.base import BaseModel
 from app.models.network import Network
-from app.models.secutiry import User
-from app.utils.kernel import convert_datetime_to_local
+from app.models.security import User
+from app.utils.datetime import convert_datetime_to_local
 
 
 class Page(BaseModel):

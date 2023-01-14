@@ -57,7 +57,7 @@ def init(app: Flask):
     @login.user_loader
     def load_user(id):
         try:
-            from app.models.secutiry import User
+            from app.models.security import User
             user = User.query.get(id)
         except Exception as e:
             db.session.rollback()

@@ -4,7 +4,7 @@ from flask_login import login_user
 from flask_security import logout_user
 from werkzeug.urls import url_parse
 from app.forms.login import LoginForm
-from app.models.secutiry import LoginSession, User, Role
+from app.models.security import LoginSession, User, Role
 from app.core.db import db
 
 
@@ -17,8 +17,8 @@ def login():
     if login.validate_on_submit():
         user = User.query.filter_by(username=login.username.data).first()
         if user is None or not user.check_password(login.password.data):
-            print(user.username)
-            print(user.check_password(login.password.data))
+            # print(user.username)
+            # print(user.check_password(login.password.data))
             print(login.password.data)
             flash('Senha ou usuário inválido', category='danger')
             return render_template('login.html', form=login, title='Login')

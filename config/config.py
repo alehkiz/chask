@@ -18,6 +18,7 @@ class BaseConfig(object):
     _SQLALCHEMY_DATABASE_PASSWORD = environ.get('DB_PASS')
     _SQLALCHEMY_DATABASE_PORT = environ.get('DB_PORT')
     _ERRORS = {'DB_COMMIT_ERROR': 'Não foi possível atualizar o banco de dados'}
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = f'postgresql://{BaseConfig._SQLALCHEMY_DATABASE_USERNAME}:{BaseConfig._SQLALCHEMY_DATABASE_PASSWORD}@{BaseConfig._SQLALCHEMY_DATABASE_HOST}:{BaseConfig._SQLALCHEMY_DATABASE_PORT}/{BaseConfig._SQLALCHEMY_DATABASE_NAME}_dev'
