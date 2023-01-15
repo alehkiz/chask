@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for, g, current_app as app
-from flask_login import login_user
+from flask_login import login_user, current_user
 from flask_security import logout_user
 from werkzeug.urls import url_parse
 from app.forms.login import LoginForm
@@ -13,6 +13,9 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/login/', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        flash('Usuário já logado', category='info')
+        return redirect(url_for('main.index'))
     login = LoginForm()
     if login.validate_on_submit():
         user = User.query.filter_by(username=login.username.data).first()

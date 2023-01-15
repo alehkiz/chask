@@ -39,7 +39,9 @@ class User(UserMixin, BaseModel):
                 backref=db.backref('users', lazy='dynamic'), 
                 lazy='dynamic')
     sessions = db.relationship('LoginSession', backref='user', lazy='dynamic')
-    
+    sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
+    received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
+
     @property
     def is_admin(self):
         if any([role.is_admin for role in self.roles.all()]):

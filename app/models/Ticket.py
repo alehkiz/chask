@@ -15,7 +15,7 @@ class Ticket(BaseModel):
     deadline = db.Column(db.DateTime, nullable=False)
     _closed_at = db.Column(db.DateTime, nullable=True)
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
-    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    create_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
     costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
     comments = db.relationship('Comment', backref='ticket', lazy='dynamic')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)

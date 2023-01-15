@@ -1,5 +1,5 @@
 import enum
-from re import search
+from re import search, sub
 
 from functools import wraps
 from unicodedata import normalize, category
@@ -56,13 +56,33 @@ def strip_accents(string:str):
     return ''.join(c for c in normalize('NFD', string)
                     if category(c)  != 'Mn')
 
-def only_letters(string:str):
-    '''retorna apenas letras no format lowercase'''
+def only_letters(string:str, lower:bool=True) -> str:
+    """Return only letter of a given `string` 
+
+    Args:
+        string (str): The string that will be processes
+        lower (bool, optional): if is `False` return the case of given string, else will lower case. Defaults to True.
+
+    Returns:
+        str: Return the string with only letters
+    """    
     text = strip_accents(string)
     text = text.replace(' ', '_')
     text = ''.join([x for x in text if x in ALPHABET])
-    return text.lower()
+    if lower is True:
+        return text.lower()
+    return text
 
+def only_numbers(string:str) -> str:
+    """return only number in string
+
+    Args:
+        string (str): string to be processed
+
+    Returns:
+        str: string with only numbers
+    """    
+    return sub("[^0-9]", "", string)
 def url_in_host(url):
     if url_parse(url).netloc == url_parse(request.base_url).netloc:
         return True
@@ -103,3 +123,26 @@ def format_number_as_thousand(number: int):
     '''formata um número como milhar com ponto (.)'''
     return f'{number:,d}'.replace(',','.')
 
+
+def validate_cpf(value:str) -> bool:
+    """Validate a given string and validate as CPF
+
+    Args:
+        value (str): CPF, can be formated as 000.000.000-00 or only numbers
+
+    Returns:
+        str: True if given value is a valid CPF or false
+    """    
+    cpf = only_numbers(value)
+    if len(cpf) != 11 or len(set(cpf)) == 1:
+        return False
+    sum_of_products = sum(int(a)*int(b) for a, b in zip(cpf[0:9], range(10, 1, -1)))
+    expected_digit = (sum_of_products * 10 % 11) % 10
+    if int(cpf[9]) != expected_digit:
+        return False
+    
+    sum_of_products = sum(int(a)*int(b) for a, b in zip(cpf[0:10], range(11, 1, -1)))
+    expected_digit = (sum_of_products * 10 % 11) % 10
+    if int(cpf[10]) != expected_digit:
+        return False
+    return True
