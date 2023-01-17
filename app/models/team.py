@@ -37,7 +37,7 @@ class Team(BaseModel):
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
     )
-    messages = db.relationship('Message', backref='team', lazy='dynamic')
+    messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
 
     def remove_user(self, user:User) -> None:
         if isinstance(user, User):
@@ -49,6 +49,22 @@ class Team(BaseModel):
                 app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
                 app.logger.error(e)
                 raise Exception('Não foi possível remover usuário do time')
+
+
+
+    def unreaded_messages(self, user):
+        from app.models.chat import Message
+        from app.models.security import User
+        total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages)\
+                .filter(User.id == user.id, Message.team_id == self.id).subquery()
+
+        read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
+                        .join(User.readed_messages)\
+                                .filter(User.id == user.id, Message.team_id == self.id)\
+                                    .filter(User.id == user.id)\
+                                        .subquery()
+        count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
+        return count_unread
 
 class UserTeam(BaseModel):
     __abstract__ = False

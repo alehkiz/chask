@@ -19,7 +19,6 @@ def index():
 @login_required
 def team(id):
     team = Team.query.filter(Team.id == id).first_or_404()
-    print(team)
     return render_template('chat.html', team=team)
 
 @socketio.on('message')
