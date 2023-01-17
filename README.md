@@ -16,8 +16,10 @@ Um CRM desenvolvido em Flask
 - [x] frontend principal;
     - [] frontend adminstrador;
     - [] frondend clientes;
+    - [] frontend chat - 20%;
 - [] Criar rotas;
-- [] Modelos de banco de dados - 40%;
+- [] Criar sistema de chat - 10%
+- [] Modelos de banco de dados - 60%;
 - [] Criar aplicação para gestão de reclamações;
 - [] Camada de administração para:
     - [] Administração de usuários (criação, inativação, atualização);
