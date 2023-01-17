@@ -157,6 +157,18 @@ class User(UserMixin, BaseModel):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+    @property
+    def unreaded_messages(self):
+        from app.models.chat import Message
+        total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages).filter(User.id == self.id).subquery()
+
+        read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
+                        .join(User.readed_messages)\
+                            .filter(User.id == self.id)\
+                                .subquery()
+        count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
+        return count_unread
     
     @staticmethod
     def query_by_month_year(year : int, month : int):
