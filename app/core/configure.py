@@ -8,7 +8,7 @@ from os.path import exists
 from os import mkdir
 
 from app.blueprints import register_blueprints
-from app.core.extesions import csrf, login, migrate, security, socketio
+from app.core.extesions import csrf, login, migrate, security, socketio, uuid
 # from app.models.network import Network
 # from app.models.page import Page, Visit
 
@@ -32,6 +32,7 @@ def init(app: Flask):
     login.init_app(app)
     login.session_protection = 'strong'
     socketio.init_app(app)
+    uuid.init_app(app)
 
     @app.shell_context_processor
     @with_appcontext

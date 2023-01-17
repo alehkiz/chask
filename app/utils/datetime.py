@@ -14,8 +14,8 @@ def format_elapsed_time(timestamp:datetime, locale='pt_BR'):
         str: A string formated as locale
     """
     if isinstance(timestamp, datetime):
-        if timestamp.tzinfo is None:
-            timestamp = convert_datetime_to_local(timestamp).replace(microsecond=0)
+        # if timestamp.tzinfo is None:
+        timestamp = convert_datetime_to_local(timestamp).replace(microsecond=0)
         return format_timedelta(timestamp-convert_datetime_to_local(datetime.utcnow()).replace(microsecond=0), add_direction=True, locale=locale)
 
 def format_datetime_local(timestamp, format='short', locale='pt_BR'):

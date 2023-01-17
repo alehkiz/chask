@@ -108,7 +108,7 @@ def fake_db_command():
         _user.username = username
         _user.name = faker.name()
         email = faker.email()
-        while emails in emails:
+        while email in emails:
             email = faker.email()
         _user.email = email
         _user.password = 'Abc123'
@@ -276,18 +276,26 @@ def fake_db_command():
     db.session.commit()
     click.echo('Respostas de Comentários criados com sucesso')
     
-    groups = []
-    groups_name = []
-    for _ in range(10):
-        group_name = faker.text(max_nb_chars=10).replace('.','').replace(' ', '')
-        if not group_name in groups_name:
-            group = GroupChat()
-            group.name = group_name
-            groups.append(group)
-            groups_name.append(group_name)
-    db.session.add_all(groups)
+    # groups = []
+    # groups_name = []
+    # for _ in range(10):
+    #     group_name = faker.text(max_nb_chars=10).replace('.','').replace(' ', '')
+    #     if not group_name in groups_name:
+    #         group = GroupChat()
+    #         group.name = group_name
+    #         groups.append(group)
+    #         groups_name.append(group_name)
+    # db.session.add_all(groups)
+    # db.session.commit()
+    # click.echo('Grupos criados com sucesso')
+    teams = []
+    for _ in range(200):
+        t =Team()
+        t.name = faker.text(max_nb_chars=randint(20,30))
+        t.active = True
+        teams.append(t)
+    db.session.add_all(teams)
     db.session.commit()
-    click.echo('Grupos criados com sucesso')
 
     for _ in range(1000):
         ms = Message()
@@ -295,7 +303,7 @@ def fake_db_command():
         ms.user_sender_id = choice(users).id
         ms.user_destiny_id = choice(users).id
         ms.create_network_id = choice(networks).id
-        ms.group_id = choice(groups).id
+        ms.team_id = choice(teams).id
         messages.append(ms)
     db.session.add_all(messages)
     db.session.commit()
@@ -314,10 +322,25 @@ def fake_db_command():
     db.session.commit()
     click.echo('Respostas de mensagem criadas com sucesso')
     
-    for _ in range(900):
-        group = choice(groups)
-        for x in range(10):
-            group.users.append(choice(users))
-    db.session.commit()
+    # for _ in range(900):
+    #     group = choice(groups)
+    #     for x in range(10):
+    #         group.users.append(choice(users))
+    # db.session.commit()
     
+    
+
+    
+    users =User.query.all()
+    admin = User.query.filter(User.username == 'admin').first()
+    for t in Team.query.all():
+        t.administrators.append(admin)
+        for _ in range(30):
+            _adm = choice(users)
+            _user = choice(users)
+            if not _adm in t.administrators:
+                t.administrators.append(_user)
+            if not _user in t.users:
+                t.users.append(choice(users))
+    db.session.commit()
     click.echo('Finalizado')

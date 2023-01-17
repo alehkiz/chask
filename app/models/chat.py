@@ -5,12 +5,18 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
 
-group_users = db.Table(
-    "group_users",
-    db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("user.id")),
-    db.Column("group_id", UUID(as_uuid=True), db.ForeignKey("group_chat.id")),
-    db.Column("joined_at", db.DateTime(timezone=True), default=datetime.utcnow),
-)
+# group_users = db.Table(
+#     "group_users",
+#     db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("user.id")),
+#     db.Column("group_id", UUID(as_uuid=True), db.ForeignKey("chat_chat.id")),
+#     db.Column("joined_at", db.DateTime(timezone=True), default=datetime.utcnow),
+# )
+
+readed_messages = db.Table('readed_messages',
+    db.Column('user_id', UUID(as_uuid=True), db.ForeignKey("user.id")),
+    db.Column('message_id', UUID(as_uuid=True), db.ForeignKey("message.id")),
+    db.Column("readed_at", db.DateTime(timezone=True), default=datetime.utcnow)
+    )
 
 
 class Message(BaseModel):
@@ -26,7 +32,7 @@ class Message(BaseModel):
     readed = db.Column(db.Boolean, default=False)
     _private = db.Column(db.Boolean, nullable=False, default=False)
     message_id = db.Column(UUID(as_uuid=True), db.ForeignKey("message.id"))
-    _group_id = db.Column(UUID(as_uuid=True), db.ForeignKey("group_chat.id"))
+    _team_id = db.Column(UUID(as_uuid=True), db.ForeignKey("team.id"))
     replies_to = db.relationship(
         "Message",
         remote_side="Message.id",
@@ -34,6 +40,15 @@ class Message(BaseModel):
         backref=db.backref(
             "answers"
         ),  # lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
+    )
+    users_readed = db.relationship(
+        "User",
+        secondary=readed_messages,
+        primaryjoin=('readed_messages.c.message_id==message.c.id'),
+        secondaryjoin=(readed_messages.c.user_id==User.id),
+        backref=db.backref(
+            "readed_messages", lazy='dynamic'
+        ),  lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
     )
 
     @hybrid_property
@@ -56,25 +71,25 @@ class Message(BaseModel):
         self._private = True
 
     @hybrid_property
-    def group_id(self) -> UUID:
-        return self._group_id
+    def team_id(self) -> UUID:
+        return self._team_id
 
-    @group_id.setter
-    def group_id(self, value):
-        self._group_id = value
+    @team_id.setter
+    def team_id(self, value):
+        self._team_id = value
         self._private = False
 
-class GroupChat(BaseModel):
-    __abstract__ = False
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    users = db.relationship(
-        "User",
-        secondary=group_users,
-        backref=db.backref(
-            "groups", lazy="dynamic", order_by="desc(group_users.c.joined_at)"
-        ),
-        lazy="dynamic",
-        order_by="desc(group_users.c.joined_at)",
-    )
-    messages = db.relationship('Message', backref='group', lazy='dynamic')
+# class GroupChat(BaseModel):
+#     __abstract__ = False
+#     name = db.Column(db.String(100), nullable=False, unique=True)
+#     users = db.relationship(
+#         "User",
+#         secondary=group_users,
+#         backref=db.backref(
+#             "groups", lazy="dynamic", order_by="desc(group_users.c.joined_at)"
+#         ),
+#         lazy="dynamic",
+#         order_by="desc(group_users.c.joined_at)",
+#     )
+#     messages = db.relationship('Message', backref='group', lazy='dynamic')
 

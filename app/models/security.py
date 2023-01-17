@@ -27,12 +27,12 @@ class User(UserMixin, BaseModel):
     _password = db.Column(db.String(512), nullable=False)
     temp_password = db.Column(db.Boolean, nullable=False, default=True)
     about_me = db.Column(db.String(512))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow())
+    last_seen = db.Column(db.DateTime(timezone=True), default=datetime.utcnow())
     location = db.Column(db.String(128), nullable=True)
     active = db.Column(db.Boolean, default=False)
     created_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
     confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
-    confirmed_at = db.Column(db.DateTime, nullable=True)
+    confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
     roles = db.relationship('Role', 
                 secondary=roles_users, 

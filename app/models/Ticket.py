@@ -12,8 +12,8 @@ class Ticket(BaseModel):
     title = db.Column(db.String(512), index=True, nullable=False)
     info = db.Column(db.String(5000), index=True, nullable=False)
     _closed = db.Column(db.Boolean)
-    deadline = db.Column(db.DateTime, nullable=False)
-    _closed_at = db.Column(db.DateTime, nullable=True)
+    deadline = db.Column(db.DateTime(timezone=True), nullable=False)
+    _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
     create_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
     costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
