@@ -181,3 +181,13 @@ a {
     padding-left: calc(var(--nav-width) + 188px)
   }
 }
+
+.teams-container {
+  overflow-y: scroll;
+  height: 40rem;
+}
+
+.messages-container {
+  overflow-y: scroll;
+  height: 30rem;
+}

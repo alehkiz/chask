@@ -1,3 +1,4 @@
+from sqlalchemy import asc
 from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
@@ -37,7 +38,7 @@ class Team(BaseModel):
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
     )
-    messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
+    messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='desc(Message.create_at)')
 
     def remove_user(self, user:User) -> None:
         if isinstance(user, User):
@@ -65,6 +66,14 @@ class Team(BaseModel):
                                         .subquery()
         count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
         return count_unread
+
+    @property
+    def time_last_message(self):
+        from app.models.chat import Message
+        message =  db.session.query(Message).filter(Message.team == self).order_by(asc(Message.create_at)).first()
+        if message is None:
+            return self.create_at
+        return message.create_at
 
 class UserTeam(BaseModel):
     __abstract__ = False

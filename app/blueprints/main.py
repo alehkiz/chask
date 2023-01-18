@@ -32,6 +32,7 @@ def before_app_request():
                 g.ip_id = ip.id
             else:
                 g.ip_id = ip.id
+        print(g.ip_id)
 @bp.teardown_request
 def teardown_request(exception):
     if not exception is None:
