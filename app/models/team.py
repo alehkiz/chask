@@ -1,4 +1,4 @@
-from sqlalchemy import asc
+from sqlalchemy import asc, desc
 from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import current_app as app
 
 from app.models.security import User
+from app.utils.datetime import format_elapsed_time
 
 team_administrators = db.Table('team_administrators',
                             db.Column('team_id', UUID(as_uuid=True), db.ForeignKey('team.id')),
@@ -38,7 +39,7 @@ class Team(BaseModel):
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
     )
-    messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='desc(Message.create_at)')
+    messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
 
     def remove_user(self, user:User) -> None:
         if isinstance(user, User):
@@ -70,10 +71,14 @@ class Team(BaseModel):
     @property
     def time_last_message(self):
         from app.models.chat import Message
-        message =  db.session.query(Message).filter(Message.team == self).order_by(asc(Message.create_at)).first()
+        message =  db.session.query(Message).filter(Message.team == self).order_by(desc(Message.create_at)).first()
         if message is None:
             return self.create_at
         return message.create_at
+
+    @property
+    def time_elapsed_last_message(self):
+        return format_elapsed_time(self.time_last_message)
 
 class UserTeam(BaseModel):
     __abstract__ = False

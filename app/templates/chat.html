@@ -28,7 +28,7 @@
                     </div>
                   </div>
                   <div class="pt-1">
-                    <p class="small text-muted mb-1">Just now</p>
+                    <p class="small text-muted mb-1">{{team.time_elapsed_last_message}}</p>
                     <span class="badge bg-danger float-end">{{team.unreaded_messages(current_user)}}</span>
                   </div>
                 </a>
@@ -135,9 +135,10 @@
       $('#message-text').keypress(function(e) {
           var code = e.keyCode || e.which;
           if (code == 13) {
-              text = $('#message-text').val();
-              $('#message-text').val('');
-              socket.emit('text', {msg: text});
+            text = $('#message-text').val();
+            $('#message-text').val('');
+            socket.emit('text', {msg: text});
+            console.log(code)
           }
       });
   });

@@ -69,7 +69,9 @@ def text(message):
     msg.team_id = session.get('room')
     try:
         db.session.add(msg)
+        
         db.session.commit()
+        print(msg.id)
     except Exception as e:
         app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
         app.logger.error(e)
