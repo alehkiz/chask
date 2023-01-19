@@ -48,7 +48,7 @@
         </div></div>
         <ul class="list-unstyled messages-container">
           {% if team is defined %}
-          {% for message in team.messages %}
+          {% for message in team.messages.limit(10) %}
           <li class="d-flex justify-content-between mb-4">
             <img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"
               class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">

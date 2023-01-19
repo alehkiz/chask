@@ -79,6 +79,14 @@ class Message(BaseModel):
         self._team_id = value
         self._private = False
 
+
+    def user_can_read(self, user: User)-> bool:
+        if self.team in user.teams:
+            return True
+        if  self.sender == user:
+            return True
+        return False
+
 # class GroupChat(BaseModel):
 #     __abstract__ = False
 #     name = db.Column(db.String(100), nullable=False, unique=True)

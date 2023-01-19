@@ -26,6 +26,7 @@ def team(id):
     team = Team.query.filter(Team.id == id).first_or_404()
     session['room'] = team.id
     session['name'] = current_user.name
+    team.add_view_message(current_user)
     return render_template('chat.html', team=team)
 
 @socketio.on('joined', namespace='/chat')

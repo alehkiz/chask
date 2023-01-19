@@ -47,7 +47,6 @@ class Team(BaseModel):
         if isinstance(user, User):
             self.users.remove(user)
             try:
-
                 db.session.commit()
             except Exception as e:
                 app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
@@ -59,16 +58,30 @@ class Team(BaseModel):
     def unreaded_messages(self, user):
         from app.models.chat import Message
         from app.models.security import User
-        total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages)\
-                .filter(User.id == user.id, Message.team_id == self.id).subquery()
-
+        # received_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages)\
+        #         .filter(User.id == user.id, Message.team_id == self.id).subquery()
+        team_messages = db.session.query(db.func.count(Message.id).label('cnt')).filter(Message.team_id == self.id).subquery()
         read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
                         .join(User.readed_messages)\
                                 .filter(User.id == user.id, Message.team_id == self.id)\
-                                    .filter(User.id == user.id)\
                                         .subquery()
-        count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
+        count_unread = db.session.query(team_messages.c.cnt - read_msg.c.cnt).scalar()
         return count_unread
+
+
+    # def unreaded_messages(self, user):
+    #     from app.models.chat import Message
+    #     from app.models.security import User
+    #     total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages)\
+    #             .filter(User.id == user.id, Message.team_id == self.id).subquery()
+
+    #     read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
+    #                     .join(User.readed_messages)\
+    #                             .filter(User.id == user.id, Message.team_id == self.id)\
+    #                                 .filter(User.id == user.id)\
+    #                                     .subquery()
+    #     count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
+    #     return count_unread
 
     @property
     def time_last_message(self):
@@ -82,10 +95,20 @@ class Team(BaseModel):
     def time_elapsed_last_message(self):
         return format_elapsed_time(self.time_last_message)
 
-    def add_view_message(user:User, messages:Optional[list[Message]], all:bool=False):
-        if isinstance(messages, list):
-            for message in messages:
-
+    def add_view_message(self, user:User, messages:Optional[list[Message]]=None):
+        if not isinstance(messages, list):
+            messages = self.messages
+        
+        for message in messages:
+            if message.user_can_read(user) and user not in message.users_readed:
+                message.users_readed.append(user)
+        try:
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+            app.logger.error(e)
+            raise Exception('Não foi possível adicionar a leitura às mesagens')
+        
 
 
 class UserTeam(BaseModel):
