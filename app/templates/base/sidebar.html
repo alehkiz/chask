@@ -1,0 +1,25 @@
+{% block sidebar %}
+
+<div class="l-navbar navbar-dark bg-dark" id="nav-bar">
+    <nav class="nav navbar-dark bg-dark">
+        <div>
+            <!-- <a href="#" class="nav_logo"> <i class='bx bx-layer nav_logo-icon'></i> <span class="nav_logo-name">BBBootstrap</span> </a> -->
+            <div class="nav_list"> 
+                <a href="#" class="nav_link"> <i class='bx bx-grid-alt nav_icon'></i> <span class="nav_name">Dashboard</span> </a> 
+                <a href="#" class="nav_link"> <i class='bx bx-user nav_icon'></i> <span class="nav_name">Users</span> </a> 
+                <a href="{{url_for('chat.index')}}" class="nav_link {{'active' if request.endpoint == 'chat.index' else ''}}"> <i class='bx bx-message-square-detail nav_icon'></i> <span class="nav_name">Chat</span> </a> 
+                <a href="#" class="nav_link"> <i class='bx bx-bookmark nav_icon'></i> <span class="nav_name">Bookmark</span> </a> 
+                <a href="#" class="nav_link"> <i class='bx bx-folder nav_icon'></i> <span class="nav_name">Files</span> </a> 
+                <a href="#" class="nav_link"> <i class='bx bx-bar-chart-alt-2 nav_icon'></i> <span class="nav_name">Stats</span> </a> 
+            </div>
+        </div> 
+        {% if current_user.is_authenticated %}
+        <a href="{{url_for('auth.logout')}}" class="nav_link"> <i class='bx bx-log-out nav_icon'></i> <span class="nav_name">Sair</span> </a>
+        {% else %}
+        <a href="{{url_for('auth.login')}}" class="nav_link"> <i class='bx bx-log-in nav_icon'></i> <span class="nav_name">Entra</span> </a>
+        {% endif %}
+    </nav>
+
+</div>
+
+{% endblock %}

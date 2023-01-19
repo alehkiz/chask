@@ -1,13 +1,11 @@
 import enum
-from re import search
-from dateutil.tz import tzutc
-from babel.dates import format_timedelta, format_datetime, get_timezone, format_date
+from re import search, sub
+
 from functools import wraps
-from datetime import date as d_date, datetime, tzinfo
 from unicodedata import normalize, category
 from werkzeug.urls import url_parse
 from flask import request
-from dateutil import tz
+
 from flask import url_for, g, session, request
 
 
@@ -31,34 +29,7 @@ def validate_password(password):
     valid_pass['ok'] = all(valid_pass.values())
     return valid_pass
 
-def format_elapsed_time(timestamp:datetime):
-    '''
-    Retorna o tempo decorrido entre o ´timezone´ e tempo atual, retona no formato do tizone atual.
-    '''
-    if isinstance(timestamp, datetime):
-        if timestamp.tzinfo is None:
-            timestamp = convert_datetime_to_local(timestamp).replace(microsecond=0)
-        return format_timedelta(timestamp-convert_datetime_to_local(datetime.utcnow()).replace(microsecond=0), add_direction=True, locale='pt_BR')
 
-def format_datetime_local(timestamp, format='short', locale='pt_BR'):
-    if not format in ['full', 'long', 'medium', 'short']:
-        format = 'short'
-    if isinstance(timestamp, datetime):
-        return format_datetime(timestamp, locale=locale, format=format, tzinfo=get_timezone('America/Sao_Paulo'))
-
-def format_date_local(date, format='short', locale='pt_BR'):
-    if not format in ['full', 'long', 'medium', 'short']:
-        format = 'short'
-    if isinstance(date, d_date):
-        return format_date(date, locale=locale, format=format)
-
-def days_elapsed(timestamp : datetime):
-    '''
-    Retornar os dias decorridos entre o ´timestamp´ e o tempo atual
-    '''
-    if isinstance(timestamp, datetime):
-        timestamp = timestamp.replace(microsecond=0, tzinfo=None)
-        return (convert_datetime_to_local(datetime.utcnow()) - timestamp).days
 
 def get_list_max_len(l, max_value):
     '''
@@ -85,13 +56,33 @@ def strip_accents(string:str):
     return ''.join(c for c in normalize('NFD', string)
                     if category(c)  != 'Mn')
 
-def only_letters(string:str):
-    '''retorna apenas letras no format lowercase'''
+def only_letters(string:str, lower:bool=True) -> str:
+    """Return only letter of a given `string` 
+
+    Args:
+        string (str): The string that will be processes
+        lower (bool, optional): if is `False` return the case of given string, else will lower case. Defaults to True.
+
+    Returns:
+        str: Return the string with only letters
+    """    
     text = strip_accents(string)
     text = text.replace(' ', '_')
     text = ''.join([x for x in text if x in ALPHABET])
-    return text.lower()
+    if lower is True:
+        return text.lower()
+    return text
 
+def only_numbers(string:str) -> str:
+    """return only number in string
+
+    Args:
+        string (str): string to be processed
+
+    Returns:
+        str: string with only numbers
+    """    
+    return sub("[^0-9]", "", string)
 def url_in_host(url):
     if url_parse(url).netloc == url_parse(request.base_url).netloc:
         return True
@@ -133,19 +124,25 @@ def format_number_as_thousand(number: int):
     return f'{number:,d}'.replace(',','.')
 
 
-def convert_datetime_to_local(timestamp):
-    to_zone = tz.gettz('America/Sao_Paulo')
-    from_zone = tz.gettz('UTC')
-    # if timestamp.tzinfo is None:
-    #     utctime = utc.localize(timestamp)
-    #     return localtz.normalize(utctime.astimezone(localtz))
-    # utctime = utc.localize(timestamp.replace(tzinfo=None))
-    # timestamp_utc = timestamp.replace(tzinfo=from_zone)
-    return timestamp.replace(tzinfo=from_zone).astimezone(to_zone)
+def validate_cpf(value:str) -> bool:
+    """Validate a given string and validate as CPF
 
-def convert_datetime_utc(timestamp):
-    to_zone = tz.gettz('UTC')
-    # utc = pytz.timezone('UTC')
-    # utctime = utc.localize(timestamp)
-    return timestamp.astimezone(to_zone) 
+    Args:
+        value (str): CPF, can be formated as 000.000.000-00 or only numbers
 
+    Returns:
+        str: True if given value is a valid CPF or false
+    """    
+    cpf = only_numbers(value)
+    if len(cpf) != 11 or len(set(cpf)) == 1:
+        return False
+    sum_of_products = sum(int(a)*int(b) for a, b in zip(cpf[0:9], range(10, 1, -1)))
+    expected_digit = (sum_of_products * 10 % 11) % 10
+    if int(cpf[9]) != expected_digit:
+        return False
+    
+    sum_of_products = sum(int(a)*int(b) for a, b in zip(cpf[0:10], range(11, 1, -1)))
+    expected_digit = (sum_of_products * 10 % 11) % 10
+    if int(cpf[10]) != expected_digit:
+        return False
+    return True

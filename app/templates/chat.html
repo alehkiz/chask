@@ -1,0 +1,155 @@
+{% extends 'base/base.html' %}
+
+
+{% block app_content %}
+
+<section style="background-color: #eee;">
+  <div class="container py-5">
+
+    <div class="row">
+
+      <div class="col-md-6 col-lg-5 col-xl-4 mb-4 mb-md-0">
+
+        <h5 class="font-weight-bold mb-3 text-center text-lg-start">Times</h5>
+
+        <div class="card">
+          <div class="card-body">
+
+            <ul class="list-unstyled mb-0 teams-container">
+              {% for team in current_user.teams %}
+              <li class="p-2 border-bottom" style="background-color: #eee;">
+                <a href="{{url_for('chat.team', id=team.id)}}" class="d-flex justify-content-between">
+                  <div class="d-flex flex-row">
+                    <img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"
+                      class="rounded-circle d-flex align-self-center me-3 shadow-1-strong" width="60">
+                    <div class="pt-1">
+                      <p class="fw-bold mb-0">{{team.name}}</p>
+                      <p class="small text-muted">Hello, Are you there?</p>
+                    </div>
+                  </div>
+                  <div class="pt-1">
+                    <p class="small text-muted mb-1">{{team.time_elapsed_last_message}}</p>
+                    <span class="badge bg-danger float-end">{{team.unreaded_messages(current_user)}}</span>
+                  </div>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-md-6 col-lg-7 col-xl-8">
+        <div class="card mb-2">
+        <div class="card-header d-flex justify-content-between p-3">
+          <p class="fw-bold mb-0">Time: {{team.name}}</p>
+        </div></div>
+        <ul class="list-unstyled messages-container">
+          {% if team is defined %}
+          {% for message in team.messages %}
+          <li class="d-flex justify-content-between mb-4">
+            <img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"
+              class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
+            <div class="card w-100">
+              <div class="card-header d-flex justify-content-between p-3">
+                <p class="fw-bold mb-0">{{message.sender.name}}</p>
+                <p class="text-muted small mb-0"><i class="far fa-clock"></i> {{message.created_at_elapsed}}</p>
+              </div>
+              <div class="card-body">
+                <p class="mb-0">
+                  {{message.message}}
+                </p>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+
+          {% endif %}
+        </ul>
+        <ul class="list-unstyled">
+          <li class="bg-white mb-3">
+            <div class="form-outline">
+              <textarea class="form-control" id="message-text" rows="4"></textarea>
+            </div>
+          </li>
+          <button type="button" class="btn btn-info btn-rounded float-end">Send</button>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="//cdn.socket.io/4.4.1/socket.io.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  var socket;
+  $(document).ready(function(){
+      socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+      socket.on('connect', function() {
+          socket.emit('joined', {});
+      });
+      socket.on('status', function(data) {
+        console.log(data)
+          $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
+          html = '<li class="d-flex justify-content-between mb-4 w-100">'+
+            '<div class="card w-100">'+
+              '<div class="card-header d-flex justify-content-between p-3">'+
+                '<p class="fw-bold mb-0">' + data.name + ' Entrou na sala</p>'+
+                '<p class="text-muted small mb-0"><i class="far fa-clock"></i> </p>'+
+              '</div>'+
+           '</div>'+
+          '</li>';
+
+          $('.messages-container').append(html)
+          $('.messages-container').scrollTop($('.messages-container')[0].scrollHeight);
+      });
+      socket.on('message', function(data) {
+        console.log(data)
+          $('#chat').val($('#chat').val() + data.msg + '\n');
+          html = '<li class="d-flex justify-content-between mb-4 w-100">'+
+            '<img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"'+
+              'class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">'+
+            '<div class="card w-100">'+
+              '<div class="card-header d-flex justify-content-between p-3">'+
+                '<p class="fw-bold mb-0">' + data.name + '</p>'+
+                '<p class="text-muted small mb-0"><i class="far fa-clock"></i> </p>'+
+              '</div>'+
+              '<div class="card-body">'+
+                '<p class="mb-0">'+
+                  data.message +
+                '</p>'+
+              '</div>'+
+           '</div>'+
+          '</li>';
+
+          $('.messages-container').append(html)
+          $('.messages-container').scrollTop($('.messages-container')[0].scrollHeight);
+      });
+      $('#message-text').keypress(function(e) {
+          var code = e.keyCode || e.which;
+          if (code == 13) {
+            text = $('#message-text').val();
+            $('#message-text').val('');
+            socket.emit('text', {msg: text});
+            console.log(code)
+          }
+      });
+  });
+  function leave_room() {
+      socket.emit('left', {}, function() {
+          socket.disconnect();
+
+          // go back to the login page
+          window.location.href = "{{ url_for('main.index') }}";
+      });
+  }
+</script>
+
+{% endblock %}

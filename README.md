@@ -10,11 +10,29 @@
 
 Um CRM desenvolvido em Flask
 
+### Funcionalidades:
+
+ - Times;
+    - Gerenciamento de times;
+    - Dashboard de produtividade;
+ - Chats;
+    - Fase 1: Somente mensagem por texto para tratamento de reclamações, individualizado por times.
+ - Fluxo de cada reclamação;
+    - A ideia é o acompanhamento do inicio ao fim, incluindo:
+        - Pesquisa de satisfação (nota) por email;
+        - Dashboard para acompanhamento da resolutividade;
+        - Acompanhamento individual (melhoria)
 
 ### Melhorias futuras:
 
+- [x] frontend principal;
+    - [] frontend adminstrador;
+    - [] frondend clientes;
+    - [] frontend chat - 20%;
 - [] Criar rotas;
-- [] Modelos de banco de dados - 10%;
+- [] Criar sistema de chat - 10%
+- [] Modelos de banco de dados - 70%;
+- [] Criar aplicação para gestão de reclamações;
 - [] Camada de administração para:
     - [] Administração de usuários (criação, inativação, atualização);
     - [] Gerenciamento de entidades e clientes;

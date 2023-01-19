@@ -9,7 +9,8 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 from app.core.db import db
-from app.utils.kernel import validate_password, format_elapsed_time
+from app.utils.kernel import validate_password
+from app.utils.datetime import format_elapsed_time
 from app.models.base import BaseModel
 from datetime import datetime
 
@@ -19,25 +20,28 @@ roles_users = db.Table('roles_users',
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
 class User(UserMixin, BaseModel):
+    __abstract__ = False
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
     name = db.Column(db.String(512), index=True, nullable=False)
     email = db.Column(db.String(128), index=True, unique=True, nullable=False)
     _password = db.Column(db.String(512), nullable=False)
     temp_password = db.Column(db.Boolean, nullable=False, default=True)
     about_me = db.Column(db.String(512))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow())
+    last_seen = db.Column(db.DateTime(timezone=True), default=datetime.utcnow())
     location = db.Column(db.String(128), nullable=True)
     active = db.Column(db.Boolean, default=False)
     created_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
     confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
-    confirmed_at = db.Column(db.DateTime, nullable=True)
+    confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
     roles = db.relationship('Role', 
                 secondary=roles_users, 
                 backref=db.backref('users', lazy='dynamic'), 
                 lazy='dynamic')
     sessions = db.relationship('LoginSession', backref='user', lazy='dynamic')
-    
+    sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
+    received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
+
     @property
     def is_admin(self):
         if any([role.is_admin for role in self.roles.all()]):
@@ -153,6 +157,18 @@ class User(UserMixin, BaseModel):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+    @property
+    def unreaded_messages(self):
+        from app.models.chat import Message
+        total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages).filter(User.id == self.id).subquery()
+
+        read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
+                        .join(User.readed_messages)\
+                            .filter(User.id == self.id)\
+                                .subquery()
+        count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
+        return count_unread
     
     @staticmethod
     def query_by_month_year(year : int, month : int):
@@ -169,6 +185,7 @@ class User(UserMixin, BaseModel):
         return User.query.filter(cast(User.created_at, Date) == start, cast(User.created_at, Date) == end)
 
 class Role(RoleMixin, BaseModel):
+    __abstract__ = False
     __metaclass__ = db.Model
     level = db.Column(db.Integer, unique=False, nullable=False)
     name = db.Column(db.String(128), nullable=False, unique=True)
@@ -226,6 +243,7 @@ class Role(RoleMixin, BaseModel):
 
 
 class LoginSession(BaseModel):
+    __abstract__ = False
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     location = db.Column(db.String(128), nullable=True)
     network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
