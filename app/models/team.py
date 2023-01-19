@@ -1,9 +1,11 @@
+from typing import Optional
 from sqlalchemy import asc, desc
 from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
 from datetime import datetime
 from flask import current_app as app
+from app.models.chat import Message
 
 from app.models.security import User
 from app.utils.datetime import format_elapsed_time
@@ -79,6 +81,12 @@ class Team(BaseModel):
     @property
     def time_elapsed_last_message(self):
         return format_elapsed_time(self.time_last_message)
+
+    def add_view_message(user:User, messages:Optional[list[Message]], all:bool=False):
+        if isinstance(messages, list):
+            for message in messages:
+
+
 
 class UserTeam(BaseModel):
     __abstract__ = False
