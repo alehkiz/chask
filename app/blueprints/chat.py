@@ -69,13 +69,12 @@ def text(message):
     msg.team_id = session.get('room')
     try:
         db.session.add(msg)
-        
         db.session.commit()
         print(msg.id)
     except Exception as e:
         app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
         app.logger.error(e)
-        raise Exception('Não foi possível salvar a mensage')
+        raise Exception('Não foi possível salvar a mensagem')
     msg_dict = {'username': current_user.username,
           'name': current_user.name,
           'timestamp': datetime.utcnow().isoformat(),
