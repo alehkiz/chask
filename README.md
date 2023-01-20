@@ -17,6 +17,7 @@ Um CRM desenvolvido em Flask
     - Dashboard de produtividade;
  - Chats;
     - Fase 1: Somente mensagem por texto para tratamento de reclamações, individualizado por times.
+        - Etapa 1 (enviar e receber mensagems e times) - 100%
         - Adionar messagens como lidas. #TODO: Criar a lógica para leitura de mensagens sempre que enviada ao frontend do usuário.
  - Fluxo de cada reclamação;
     - A ideia é o acompanhamento do inicio ao fim, incluindo:
