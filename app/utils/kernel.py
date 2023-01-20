@@ -3,7 +3,7 @@ from re import search, sub
 
 from functools import wraps
 from unicodedata import normalize, category
-from werkzeug.urls import url_parse
+
 from flask import request
 
 from flask import url_for, g, session, request
@@ -62,10 +62,7 @@ def only_numbers(string:str) -> str:
         str: string with only numbers
     """    
     return sub("[^0-9]", "", string)
-def url_in_host(url):
-    if url_parse(url).netloc == url_parse(request.base_url).netloc:
-        return True
-    return False
+
 
 
 def order_dict(dictionary: dict, size:int =5, summarize=False,other_key:str='Outros', extra_size:bool=False):

@@ -43,6 +43,13 @@ class User(UserMixin, BaseModel):
     received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
 
     @property
+    def teams_ordered_by_last_message(self):
+        from app.models.team import Team
+        from app.models.chat import Message
+        query = db.session.query(Team).join(Team.messages, self.teams).order_by(Message.create_at.desc())
+        return query
+
+    @property
     def is_admin(self):
         if any([role.is_admin for role in self.roles.all()]):
             return True

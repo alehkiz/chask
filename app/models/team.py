@@ -68,24 +68,14 @@ class Team(BaseModel):
         count_unread = db.session.query(team_messages.c.cnt - read_msg.c.cnt).scalar()
         return count_unread
 
-
-    # def unreaded_messages(self, user):
-    #     from app.models.chat import Message
-    #     from app.models.security import User
-    #     total_messages = db.session.query(db.func.count(Message.id).label('cnt')).join(User.received_messages)\
-    #             .filter(User.id == user.id, Message.team_id == self.id).subquery()
-
-    #     read_msg = db.session.query(db.func.count(Message.id).label('cnt'))\
-    #                     .join(User.readed_messages)\
-    #                             .filter(User.id == user.id, Message.team_id == self.id)\
-    #                                 .filter(User.id == user.id)\
-    #                                     .subquery()
-    #     count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
-    #     return count_unread
+    @property
+    def last_message(self):
+        #db.session.query(Team, Message).join(Team.messages, admin.teams).distinct(Team.id).order_by(Team.id, Message.create_at.desc()).all()#Times ordenados por última mensagem
+        # return self.messages.order_by(Message.create_at.desc()).first()
+        return db.session.query(Message).filter(Message.team == self).order_by(desc(Message.create_at)).first()
 
     @property
     def time_last_message(self):
-        from app.models.chat import Message
         message =  db.session.query(Message).filter(Message.team == self).order_by(desc(Message.create_at)).first()
         if message is None:
             return self.create_at

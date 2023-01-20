@@ -1,5 +1,5 @@
 import pytest
-from app.utils.kernel import validate_password, strip_accents, only_letters, url_in_host, order_dict
+from app.utils.kernel import validate_password, strip_accents, only_letters, order_dict
 
 def test_validate_password_only_numbers():
     password = '123'
@@ -66,3 +66,8 @@ def strip_accents_without_accents():
         value = 'Teste se acento nenhum'
         test = strip_accents(value)
         assert value == test
+
+def strip_accents_with_accents():
+        value = 'Acentuação, pontuação ÃOÉ'
+        test = strip_accents(value)
+        assert 'Acentuaçao, pontuaçao AOE' == test

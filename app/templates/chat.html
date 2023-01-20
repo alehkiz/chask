@@ -16,20 +16,24 @@
           <div class="card-body">
 
             <ul class="list-unstyled mb-0 teams-container">
-              {% for team in current_user.teams %}
+              {% for user_team in current_user.teams_ordered_by_last_message %}
+              {% if team is defined and team.id == user_team.id %}
+              <li class="p-2 border-bottom" style="background-color: #20601770;">
+              {% else %}
               <li class="p-2 border-bottom" style="background-color: #eee;">
-                <a href="{{url_for('chat.team', id=team.id)}}" class="d-flex justify-content-between">
+                {% endif %}
+                <a href="{{url_for('chat.team', id=user_team.id)}}" class="d-flex justify-content-between">
                   <div class="d-flex flex-row">
                     <img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"
                       class="rounded-circle d-flex align-self-center me-3 shadow-1-strong" width="60">
                     <div class="pt-1">
-                      <p class="fw-bold mb-0">{{team.name}}</p>
-                      <p class="small text-muted">Hello, Are you there?</p>
+                      <p class="fw-bold mb-0">{{user_team.name}}</p>
+                      <p class="small text-muted">{{user_team.last_message.message[0:15]}}</p>
                     </div>
                   </div>
                   <div class="pt-1">
-                    <p class="small text-muted mb-1">{{team.time_elapsed_last_message}}</p>
-                    <span class="badge bg-danger float-end">{{team.unreaded_messages(current_user)}}</span>
+                    <p class="small text-muted mb-1">{{user_team.time_elapsed_last_message}}</p>
+                    <span class="badge bg-danger float-end">{{user_team.unreaded_messages(current_user)}}</span>
                   </div>
                 </a>
               </li>
