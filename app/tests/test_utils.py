@@ -1,5 +1,5 @@
 import pytest
-from app.utils.kernel import validate_password, format_elapsed_time, format_datetime_local, format_datetime_local, days_elapsed, get_list_max_len, strip_accents, only_letters, url_in_host, order_dict, format_datetime_local, convert_datetime_to_local, convert_datetime_utc
+from app.utils.kernel import validate_password, strip_accents, only_letters, url_in_host, order_dict
 
 def test_validate_password_only_numbers():
     password = '123'
@@ -60,3 +60,9 @@ def test_validate_password_only_letters_six_length_upper_number():
             'lowercase': True,
             'ok': True}
     assert test == valid
+
+
+def strip_accents_without_accents():
+        value = 'Teste se acento nenhum'
+        test = strip_accents(value)
+        assert value == test

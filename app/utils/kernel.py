@@ -30,27 +30,6 @@ def validate_password(password):
     return valid_pass
 
 
-
-def get_list_max_len(l, max_value):
-    '''
-    Recebe uma lista ´l´ a retorna a mesma lista, desde que a quantidade de caracteres da lista não exceda ´max_value´
-    '''
-    if not isinstance(max_value, int) or max_value < 1:
-        return l
-    if sum([len(_) for _ in l]) < max_value:
-        return l
-    _temp_l = []
-    _temp_sum = 0
-    for v in l:
-        _temp_sum += len(v)
-        if _temp_sum > max_value:
-            break
-        _temp_l.append(v)
-    if not _temp_l:
-        return [l[0][0:max_value]]
-    return _temp_l
-
-
 def strip_accents(string:str):
     '''Remove acentos da string'''
     return ''.join(c for c in normalize('NFD', string)
