@@ -25,6 +25,8 @@ class Costumer(BaseModel):
             if validate_cpf(value):
                 self._identifier = only_numbers(value)
 
+    
+
         
             
 

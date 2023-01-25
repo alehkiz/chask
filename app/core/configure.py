@@ -64,8 +64,6 @@ def init(app: Flask):
                 user = User.query.filter_by(session_token=session_token).first()
                 if not user is None:
                     from flask import session
-                    print(f'session: {session}')
-                    print(f'Token: {user.session_token}')
             except Exception as e:
                 db.session.rollback()
                 app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))

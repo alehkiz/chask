@@ -45,7 +45,6 @@ class AddressPostcode(BaseModel):
             case 8:
                 self._code = only_numbers(value)
             case _:
-                print(value)
                 raise Exception('Houve um erro em atribuir `postcode`')
 
 

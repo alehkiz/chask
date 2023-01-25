@@ -17,9 +17,10 @@ class Ticket(BaseModel):
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
     create_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
     costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
+    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
     comments = db.relationship('Comment', backref='ticket', lazy='dynamic')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
-
+    
     @hybrid_property
     def closed(self):
         return self.closed

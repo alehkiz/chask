@@ -14,8 +14,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/login/', methods=['GET', 'POST'])
 def login():
-    print(session)
-    print(f'Usuário logado: {current_user.is_authenticated}')
     if current_user.is_authenticated:
         flash('Usuário já logado', category='info')
         return redirect(url_for('main.index'))

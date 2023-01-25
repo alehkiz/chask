@@ -9,15 +9,15 @@ from app.models.chat import Message
 from app.core.db import db
 from app.models.network import Network
 from app.models.team import Team
+from app.utils.route import authenticated_only
 
 bp = Blueprint('chat', __name__, url_prefix='/chat')
 
 
 @bp.route('/')
 @bp.route('/index')
-@login_required
+# @login_required
 def index():
-    print(session)
     return render_template('chat.html')
 
 
@@ -31,6 +31,7 @@ def team(id):
     return render_template('chat.html', team=team)
 
 @socketio.on('joined', namespace='/chat')
+@authenticated_only
 def joined(message):
     """Sent by clients when they enter a room.
     A status message is broadcast to all people in the room."""
@@ -44,6 +45,7 @@ def joined(message):
 
 
 @socketio.on('text', namespace='/chat')
+@authenticated_only
 def text(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
@@ -75,7 +77,6 @@ def text(message):
         try:
             db.session.add(msg)
             db.session.commit()
-            print(msg.id)
         except Exception as e:
             app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
             app.logger.error(e)
@@ -85,13 +86,13 @@ def text(message):
             'timestamp': datetime.utcnow().isoformat(),
             'message_id': str(msg.id),
             'message': message['msg']}
-        print(msg_dict)
         emit('message', msg_dict, room=room)
     else:
         return False
 
 
 @socketio.on('left', namespace='/chat')
+@authenticated_only
 def left(message):
     """Sent by clients when they leave a room.
     A status message is broadcast to all people in the room."""
