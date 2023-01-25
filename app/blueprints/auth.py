@@ -20,9 +20,6 @@ def login():
     if login.validate_on_submit():
         user = User.query.filter_by(username=login.username.data).first()
         if user is None or not user.check_password(login.password.data):
-            # print(user.username)
-            # print(user.check_password(login.password.data))
-            print(login.password.data)
             flash('Senha ou usuário inválido', category='danger')
             return render_template('login.html', form=login, title='Login')
         if not user.is_active:
@@ -42,6 +39,8 @@ def login():
             return abort(500)
         user.last_seen = datetime.utcnow()
         db.session.add(login_session)
+        print(f'Sessão: {session}')
+        print("Usuário logado:", current_user.is_authenticated)
         try:
             db.session.commit()
         except Exception as e:
