@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import uuid4
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for, g, current_app as app
 from flask_login import login_user, current_user
 from flask_security import logout_user
@@ -13,6 +14,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/login/', methods=['GET', 'POST'])
 def login():
+    print(session)
+    print(f'Usuário logado: {current_user.is_authenticated}')
     if current_user.is_authenticated:
         flash('Usuário já logado', category='info')
         return redirect(url_for('main.index'))
@@ -28,19 +31,19 @@ def login():
         if user.is_temp_password:
             flash('É necessário alterar sua senha', category='warning')
             return redirect(url_for('auth.temp_password'))
-        login_user(user, remember=login.remember_me.data)
         login_session = LoginSession()
         login_session.user_id = user.id
         user.login_count += 1
-        user.session_token = session["_id"]
+        if session.get('uuid', False) is False:
+            session['uuid'] =  uuid4()
+        user.session_token = session['uuid']
         if hasattr(g, 'ip_id'):
             login_session.network_id = g.ip_id
         else:
             return abort(500)
         user.last_seen = datetime.utcnow()
+        login_user(user, remember=login.remember_me.data)
         db.session.add(login_session)
-        print(f'Sessão: {session}')
-        print("Usuário logado:", current_user.is_authenticated)
         try:
             db.session.commit()
         except Exception as e:

@@ -34,7 +34,7 @@ class User(UserMixin, BaseModel):
     confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
     confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
-    session_token = db.Column(db.String(40), index=True) 
+    session_token = db.Column(db.String(256), index=True) 
     roles = db.relationship('Role', 
                 secondary=roles_users, 
                 backref=db.backref('users', lazy='dynamic'), 
@@ -44,7 +44,7 @@ class User(UserMixin, BaseModel):
     received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
 
     def get_id(self):                                                           
-        return str(self.session_token) 
+        return str(self.session_token)
 
     @property
     def teams_ordered_by_last_message(self):

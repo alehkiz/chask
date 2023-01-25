@@ -1,3 +1,4 @@
+from uuid import uuid4
 from flask import Blueprint, abort, redirect, render_template, session, url_for, request, current_app as app, g
 from flask_login import login_required
 from flask_security import roles_accepted
@@ -14,6 +15,8 @@ bp = Blueprint('main', __name__, url_prefix='/')
 @bp.before_app_request
 def before_app_request():
     if request.endpoint != 'static':
+        if session.get('uuid', False) is False:
+            session['uuid'] = app.login_manager._session_identifier_generator()
         if not hasattr(g, 'id_id'):
             ip = Network.query.filter(
                 Network.ip == request.remote_addr).first()
@@ -32,7 +35,7 @@ def before_app_request():
                 g.ip_id = ip.id
             else:
                 g.ip_id = ip.id
-        print(g.ip_id)
+        # print(g.ip_id)
 @bp.teardown_request
 def teardown_request(exception):
     if not exception is None:
