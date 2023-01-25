@@ -57,10 +57,10 @@ def init(app: Flask):
 
     register_blueprints(app)
     @login.user_loader
-    def load_user(id):
+    def load_user(session_token):
         try:
             from app.models.security import User
-            user = User.query.get(id)
+            user = User.query.filter_by(session_token=session_token).first()
         except Exception as e:
             db.session.rollback()
             app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
