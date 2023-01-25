@@ -32,7 +32,6 @@ def login():
             flash('É necessário alterar sua senha', category='warning')
             return redirect(url_for('auth.temp_password'))
         login_user(user, remember=login.remember_me.data)
-        
         login_session = LoginSession()
         login_session.user_id = user.id
         user.login_count += 1
