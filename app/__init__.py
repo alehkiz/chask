@@ -1,7 +1,8 @@
 from flask import Flask
-from config.config import config
 from app.core.configure import init
 from app.core.db import fake_db_command
+from config.config import config
+
 
 def create_app(mode='production'):
     app = Flask(__name__)

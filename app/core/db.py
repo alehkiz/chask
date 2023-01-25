@@ -239,6 +239,28 @@ def fake_db_command():
     db.session.commit()
     click.echo('Clientes criados com sucesso')
 
+    groups_services = []
+    groups = ['Habilitação', 'Veículos']
+    for _g in groups:
+        gs = GroupService()
+        gs.name = _g
+        groups_services.append(gs)
+    db.session.add_all(groups_services)
+    db.session.commit()
+    click.echo('Grupos criados com sucesso')
+
+    services = []
+    for _ in range(50):
+        s = Service()
+        s.group_id = choice(groups_services).id
+        s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        services.append(s)
+
+    db.session.add_all(services)
+    db.session.commit()
+    click.echo('Serviços criados com sucesso')
+
+
     for _ in range(100):
         _ticket = Ticket()
         _ticket.name = faker.text(max_nb_chars=500)
@@ -248,6 +270,7 @@ def fake_db_command():
         _ticket.type_id = choice(tickets_type).id
         _ticket.create_network_id = choice(networks).id
         _ticket.costumer_id = choice(costumers).id
+        _ticket.service_id = choice(services).id
         tickets.append(_ticket)
     db.session.add_all(tickets)
     db.session.commit()

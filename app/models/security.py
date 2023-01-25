@@ -19,6 +19,13 @@ roles_users = db.Table('roles_users',
                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
+services_users = db.Table('services_users',
+                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+                            db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
+group_services_users = db.Table('group_services_users',
+                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+                            db.Column('group_service_id', UUID(as_uuid=True), db.ForeignKey('group_service.id')))
+
 class User(UserMixin, BaseModel):
     __abstract__ = False
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
@@ -38,6 +45,14 @@ class User(UserMixin, BaseModel):
     roles = db.relationship('Role', 
                 secondary=roles_users, 
                 backref=db.backref('users', lazy='dynamic'), 
+                lazy='dynamic')
+    services = db.relationship('Service', 
+                secondary=services_users, 
+                backref=db.backref('users', lazy='dynamic'), 
+                lazy='dynamic')
+    group_services = db.relationship('GroupService', 
+                secondary=group_services_users, 
+                backref=db.backref('group_services', lazy='dynamic'), 
                 lazy='dynamic')
     sessions = db.relationship('LoginSession', backref='user', lazy='dynamic')
     sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
