@@ -34,7 +34,7 @@ class Ticket(BaseModel):
         return db.session.query(User).join(UserTicket, self.user)\
             .filter(UserTicket.ticket_id == self.id)\
                 .order_by(UserTicket.create_at.desc()).limit(1).first()
-    
+
     @hybrid_property
     def closed(self):
         return self.closed
@@ -83,3 +83,5 @@ class UserTicket(BaseModel):
     __abstract__ = False
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
     ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ticket.id"), nullable=False)
+
+    
