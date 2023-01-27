@@ -269,12 +269,22 @@ def fake_db_command():
         _ticket.deadline = faker.date_between_dates(datetime.today(), datetime.today() + timedelta(days=365))
         _ticket.type_id = choice(tickets_type).id
         _ticket.create_network_id = choice(networks).id
+        _ticket.create_user_id = choice(users).id
         _ticket.costumer_id = choice(costumers).id
         _ticket.service_id = choice(services).id
         tickets.append(_ticket)
     db.session.add_all(tickets)
     db.session.commit()
     click.echo('Tickets criados com sucesso')
+    
+    users_tickets = []
+    for _ticket in Ticket.query:
+        ut = UserTicket()
+        ut.user_id = choice(users).id
+        ut.ticket_id = _ticket.id
+        users_tickets.append(ut)
+    db.session.add_all(users_tickets)
+    db.session.commit()
 
     for _ in range(3000):
         _cm = Comment()

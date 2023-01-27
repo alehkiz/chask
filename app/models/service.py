@@ -2,7 +2,8 @@
 from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
-
+from sqlalchemy import event
+from sqlalchemy.orm.interfaces import EXT_STOP
 
 class Service(BaseModel):
     __abstract__ = False
@@ -15,3 +16,7 @@ class GroupService(BaseModel):
     __abstract__ = False
     name = db.Column(db.String(32), nullable=False, index=True, unique=True)
     services = db.relationship('Service',  backref='group', lazy='dynamic')
+
+
+
+

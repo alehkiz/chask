@@ -16,10 +16,24 @@ class Ticket(BaseModel):
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
     create_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    create_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
     service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
     comments = db.relationship('Comment', backref='ticket', lazy='dynamic')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
+    user = db.relationship('User', secondary='user_ticket', 
+                primaryjoin=('user_ticket.c.ticket_id==ticket.c.id'),
+                secondaryjoin=('user_ticket.c.user_id==user.c.id'),
+                backref=db.backref('tickets', lazy='dynamic'),
+            lazy='dynamic')
+    
+
+    @property
+    def current_user(self):
+        from app.models.security import User
+        return db.session.query(User).join(UserTicket, self.user)\
+            .filter(UserTicket.ticket_id == self.id)\
+                .order_by(UserTicket.create_at.desc()).limit(1).first()
     
     @hybrid_property
     def closed(self):
@@ -63,3 +77,9 @@ class TicketType(BaseModel):
     __abstract__ = False
     type = db.Column(db.String(512), index=True, nullable=False, unique=True)
     tickets = db.relationship('Ticket', backref='type', lazy='dynamic', single_parent=True)
+
+
+class UserTicket(BaseModel):
+    __abstract__ = False
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
+    ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey("ticket.id"), nullable=False)
