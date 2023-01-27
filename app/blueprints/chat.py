@@ -16,7 +16,7 @@ bp = Blueprint('chat', __name__, url_prefix='/chat')
 
 @bp.route('/')
 @bp.route('/index')
-# @login_required
+@login_required
 def index():
     return render_template('chat.html')
 
