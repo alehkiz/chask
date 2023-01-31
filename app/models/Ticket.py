@@ -125,6 +125,9 @@ class TicketStageEvent(BaseModel):
     ticket_stage_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_stage.id'), nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket.id'), nullable=False)
+    deadline = db.Column(db.DateTime(timezone=True), nullable=False)
+    _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    _closed = db.Column(db.Boolean)
     info = db.Column(db.Text)
     user = db.relationship('User', backref=db.backref('user_stage', overlaps="tickets,users"), overlaps="tickets,users")
     stage = db.relationship('TicketStage', backref='events')
@@ -138,6 +141,41 @@ class TicketStageEvent(BaseModel):
         self.ticket_id = ticket_id
         self.info = info
 
+    @hybrid_property
+    def closed(self):
+        return self.closed
+    
+    @closed.setter
+    def closed(self, value):
+        match value:
+            case True:
+                self._closed = True
+                self.closed_at = datetime.utcnow()
+            case False:
+                self._closed = False
+        
+    @property
+    def is_closed(self):
+        if self._closed is True:
+            return True
+        else:
+            return False
+
+    @hybrid_property
+    def closed_at(self):
+        return self.closed_at
+    
+    @closed.setter
+    def closed_at(self, value):
+        raise Exception('Não é possível incluir ou alterar a data do fechamento por closed_at, altere o atributo closed')
+
+    @property
+    def closed_at_elapsed(self):
+        return format_elapsed_time(self.closed_at)
+
+    @property
+    def deadline_elapsed(self):
+        return format_elapsed_time(self.deadline)
 
         
 
