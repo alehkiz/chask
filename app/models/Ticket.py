@@ -25,15 +25,15 @@ class Ticket(BaseModel):
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
     stage_event = db.relationship('TicketStageEvent',
                             primaryjoin='ticket_stage_event.c.ticket_id==ticket.c.id',
-                            backref=db.backref('ticket', overlaps="tickets,users"),
-                            lazy='dynamic',
-                            overlaps="tickets,users")
+                            backref=db.backref('ticket'),
+                            lazy='dynamic')
     users = db.relationship('User', secondary='ticket_stage_event', 
-                primaryjoin=('ticket_stage_event.c.ticket_id==ticket.c.id'),
-                secondaryjoin=('ticket_stage_event.c.user_id==user.c.id'),
+                primaryjoin=('ticket_stage_event.c.ticket_id==foreign(ticket.c.id)'),#foreign for overlap foreign key
+                secondaryjoin=('ticket_stage_event.c.user_id==foreign(user.c.id)'),
                 backref=db.backref('tickets', lazy='dynamic'), 
                 lazy='dynamic'
                 )
+
     stages =  association_proxy('stage_event', 'stage')
 
 
@@ -129,7 +129,7 @@ class TicketStageEvent(BaseModel):
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     _closed = db.Column(db.Boolean)
     info = db.Column(db.Text)
-    user = db.relationship('User', backref=db.backref('user_stage', overlaps="tickets,users"), overlaps="tickets,users")
+    user = db.relationship('User', backref=db.backref('user_stage'))
     stage = db.relationship('TicketStage', backref='events')
     user_name = association_proxy('user', 'name')
     stage_name = association_proxy('stage', 'name')
