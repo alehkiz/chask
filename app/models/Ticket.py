@@ -24,7 +24,7 @@ class Ticket(BaseModel):
     create_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
     costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
     service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
-    comments = db.relationship('Comment', backref='ticket', lazy='dynamic')
+    comments = db.relationship('Comment', backref=db.backref('ticket',  order_by='desc(Comment.create_at)'), lazy='dynamic', order_by='desc(Comment.create_at)')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
     stage_event = db.relationship('TicketStageEvent',
                             primaryjoin='ticket_stage_event.c.ticket_id==ticket.c.id',
@@ -39,25 +39,8 @@ class Ticket(BaseModel):
 
     stages =  association_proxy('stage_event', 'stage')
 
-
-
-    # user_tickets = db.relationship('UserTicket',
-    #                 primaryjoin=('user_ticket.c.ticket_id==ticket.c.id'),
-    #                 backref=db.backref('tickets'),
-    #                 lazy='dynamic'
-    #                 )
-    # stages = db.relationship('TicketStageEvent',# secondary='ticket_stage_event', 
-    #             primaryjoin=('and_(ticket_stage_event.c.user_id==user.c.id, ticket_stage_event.c.ticket_id==ticket.c.id)'),
-    #             # secondary=('join(UserTicket, UserTicket.ticket_id == Ticket.id)'),
-    #             # secondaryjoin='and_(user_ticket.c.user_id == user.c.id, user_ticket.c.ticket_id== ticket.c.id)',
-    #             # secondaryjoin='ticket_stage_event.c.user_id == user.c.id',
-    #             backref=db.backref('tickets_stages', lazy='dynamic'),
-    #             #viewonly=True,
-    #             lazy='dynamic')
-
     @property
     def current_user(self):
-        # from app.models.security import User
         if self.current_stage_event != None:
             return self.current_stage_event.user
         return None
@@ -164,8 +147,11 @@ class TicketStageEvent(BaseModel):
                 deadline=deadilne, 
                 info=info)
         if close_last is True:
-            last_event = query.first()
-            last_event.closed = True
+            last_event = db.session.query(TicketStageEvent).filter(
+                    TicketStageEvent.ticket_id == ticket.id,
+                ).order_by(TicketStageEvent.create_at.desc()).first()
+            if not last_event is None:
+                last_event.closed = True
         try:
             db.session.add(tse)
             db.session.commit()
@@ -184,7 +170,7 @@ class TicketStageEvent(BaseModel):
         match value:
             case True:
                 self._closed = True
-                self.closed_at = datetime.utcnow()
+                self._closed_at = datetime.utcnow()
             case False:
                 self._closed = False
         
