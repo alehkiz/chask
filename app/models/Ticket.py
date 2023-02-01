@@ -148,7 +148,7 @@ class TicketStageEvent(BaseModel):
         
         self.info = info
     @staticmethod
-    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadilne: datetime, info: Optional[str]=None, force=False):
+    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadilne: datetime, info: Optional[str]=None, close_last: bool=False, force: bool=False):
         query = db.session.query(TicketStageEvent).filter(
             TicketStageEvent.ticket_stage_id==ticket_stage.id,
             TicketStageEvent.user_id == user.id,
@@ -163,7 +163,9 @@ class TicketStageEvent(BaseModel):
                 ticket_stage_id=ticket_stage.id,
                 deadline=deadilne, 
                 info=info)
-
+        if close_last is True:
+            last_event = query.first()
+            last_event.closed = True
         try:
             db.session.add(tse)
             db.session.commit()
