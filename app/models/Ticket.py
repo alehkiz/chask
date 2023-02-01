@@ -1,11 +1,14 @@
 from datetime import datetime
+from typing import Optional
 from app.core.db import db
 from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
+from app.models.security import User
 from app.utils.datetime import format_elapsed_time
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import event
+from flask import current_app as app
 
 
 class Ticket(BaseModel):
@@ -129,17 +132,46 @@ class TicketStageEvent(BaseModel):
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     _closed = db.Column(db.Boolean)
     info = db.Column(db.Text)
-    user = db.relationship('User', backref=db.backref('user_stage'))
-    stage = db.relationship('TicketStage', backref='events')
+    user = db.relationship('User', backref=db.backref('user_stage', lazy='dynamic'))
+    stage = db.relationship('TicketStage', backref=db.backref('events', lazy='dynamic'))
     user_name = association_proxy('user', 'name')
     stage_name = association_proxy('stage', 'name')
     stage_level = association_proxy('stage', 'level')
     
-    def __init__(self, ticket_stage_id, user_id, ticket_id, info) -> None:
+    def __init__(self, ticket_stage_id, user_id, ticket_id, deadline, info=None) -> None:
         self.ticket_stage_id = ticket_stage_id
         self.user_id = user_id
         self.ticket_id = ticket_id
+        if deadline < datetime.utcnow():
+            raise Exception('Deadline menor que a data/hora atual.')
+        self.deadline = deadline
+        
         self.info = info
+    @staticmethod
+    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadilne: datetime, info: Optional[str]=None, force=False):
+        query = db.session.query(TicketStageEvent).filter(
+            TicketStageEvent.ticket_stage_id==ticket_stage.id,
+            TicketStageEvent.user_id == user.id,
+            TicketStageEvent.ticket_id == ticket.id,
+        ).order_by(TicketStageEvent.create_at.desc())#mais recente primeiro
+        if query.count() > 0 and force is False:
+            raise Exception('Não é possível adicionar o evento, já há um cadastro')
+        else:
+            tse = TicketStageEvent(
+                user_id=user.id,
+                ticket_id=ticket.id,
+                ticket_stage_id=ticket_stage.id,
+                deadline=deadilne, 
+                info=info)
+
+        try:
+            db.session.add(tse)
+            db.session.commit()
+            return tse
+        except Exception as e:
+            app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+            app.logger.error(e)
+            raise Exception('Não foi possível salvar o IP')
 
     @hybrid_property
     def closed(self):
