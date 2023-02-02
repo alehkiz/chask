@@ -10,7 +10,7 @@
             <a href='{{url_for("chat.index")}}'>{{current_user.teams.count()}} Times</a>
           </div>
           <div class="col border border-success rounded p-2 m-2">
-            {{current_user.tickets.count()}} Tickets
+            <a href="{{url_for('ticket.index')}}">{{current_user.tickets.count()}} Tickets</a>
           </div>
           <div class="col border border-success rounded p-2 m-2">
             One of three columns
