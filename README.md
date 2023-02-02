@@ -22,6 +22,10 @@ Um CRM desenvolvido em Flask
         -- Criado o modelo de Estágio de Eventos (TicketStageEvent) para cada Ticket no qual cada usuário será responsável pela conclusão da etapa
  - Fluxo de cada reclamação:
     - A ideia é o acompanhamento do inicio ao fim, incluindo:
+        - Cada reclamação é um ticket, que é separado por etapas, podendo ser concluído em algums pré-definidas.
+        - Para cada etapas um funcionário fica responsável até a conclusão da etapa;
+            - Cada etapa possuí um SLA para resposta;
+        - Alertas sobre  estour do SLA serão emitidos;
         - Pesquisa de satisfação (nota) por email;
         - Dashboard para acompanhamento da resolutividade;
         - Acompanhamento individual (melhoria)
