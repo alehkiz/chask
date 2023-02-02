@@ -41,6 +41,17 @@ class Team(BaseModel):
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
     )
+
+    services = db.relationship('Service', secondary='group_service_team',
+                    primaryjoin='team.c.id==group_service_team.c.team_id',
+                    secondaryjoin='group_service_team.c.id==service.c.group_id',
+                    backref=db.backref("teams", lazy='dynamic'),
+                    lazy='dynamic')
+    groups = db.relationship('GroupService', secondary='group_service_team',
+                    primaryjoin='foreign(team.c.id)==group_service_team.c.team_id',
+                    secondaryjoin='group_service_team.c.group_id==foreign(group_service.c.id)',
+                    backref=db.backref("teams", lazy='dynamic'),
+                    lazy='dynamic')
     messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
 
     def remove_user(self, user:User) -> None:

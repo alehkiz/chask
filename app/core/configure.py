@@ -61,7 +61,7 @@ def init(app: Flask):
         if not session_token is None:
             try:
                 from app.models.security import User
-                user = User.query.filter_by(session_token=session_token).first()
+                user = User.query.filter_by(fs_uniquifier=session_token).first()
                 if not user is None:
                     from flask import session
             except Exception as e:

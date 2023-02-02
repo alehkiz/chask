@@ -7,8 +7,9 @@
             <div class="nav_list"> 
                 <a href="{{url_for('main.index')}}" class="nav_link"> <i class='bx bx-grid-alt nav_icon'></i> <span class="nav_name">Dashboard</span> </a> 
                 <a href="#" class="nav_link"> <i class='bx bx-user nav_icon'></i> <span class="nav_name">Users</span> </a> 
-                <a href="{{url_for('chat.index')}}" class="nav_link {{'active' if request.endpoint == 'chat.index' else ''}}"> <i class='bx bx-message-square-detail nav_icon'></i> <span class="nav_name">Chat</span> </a> 
-                <a href="#" class="nav_link"> <i class='bx bx-bookmark nav_icon'></i> <span class="nav_name">Bookmark</span> </a> 
+                <a href="{{url_for('chat.index')}}" class="nav_link {{'active' if request.endpoint == 'chat.index' else ''}}"> 
+                    <i class='bx bx-message-rounded nav_icon'></i> <span class="nav_name">Chat</span> </a> 
+                <a href="{{url_for('ticket.index')}}" class="nav_link"> <i class='bx bx-layer nav_icon'></i> <span class="nav_name">Tickets</span> </a> 
                 <a href="#" class="nav_link"> <i class='bx bx-folder nav_icon'></i> <span class="nav_name">Files</span> </a> 
                 <a href="#" class="nav_link"> <i class='bx bx-bar-chart-alt-2 nav_icon'></i> <span class="nav_name">Stats</span> </a> 
             </div>
@@ -22,4 +23,4 @@
 
 </div>
 
-{% endblock %}
+{% endblock %}<i class='bx bx-message' ></i>

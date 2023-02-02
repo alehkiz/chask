@@ -34,7 +34,7 @@ def login():
         user.login_count += 1
         if session.get('uuid', False) is False:
             session['uuid'] =  uuid4()
-        user.session_token = session['uuid']
+        user.fs_uniquifier = session['uuid']
         if hasattr(g, 'ip_id'):
             login_session.network_id = g.ip_id
         else:

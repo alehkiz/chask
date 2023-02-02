@@ -1,12 +1,14 @@
 from uuid import uuid4
-from flask import Blueprint, abort, redirect, render_template, session, url_for, request, current_app as app, g
+from flask import Blueprint, abort, jsonify, redirect, render_template, session, url_for, request, current_app as app, g
 from flask_login import login_required
 from flask_security import roles_accepted
 from app.core.db import db
 from app.models.network import Network
 from app.utils.route import counter
+from app.core.extesions import login
 
 bp = Blueprint('main', __name__, url_prefix='/')
+
 
 # @bp.before_app_first_request
 # def before_first_request():
@@ -51,6 +53,26 @@ def teardown_request(exception):
 def index():
     return render_template('base/base.html')
 
+
+
+
+_security = app.extensions["security"]
+@_security.unauthz_handler
+def my_unauthz_handler(func, params):
+#     print('aqui')
+    print(request.is_json)
+    if request.is_json:
+        return jsonify(success=False,
+                       data={'role_required': True},
+                       message='Você não tem acesso ao conteudo.'), 401
+    else:
+        return render_template('errors/401.html'), 401
+
+@bp.route('/unauthorized/')
+@counter
+def unauthorized():
+    # print(login.unauthorized_callback())
+    return render_template('errors/401.html')
 
 @bp.route('/adm/')
 @login_required

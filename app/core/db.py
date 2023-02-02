@@ -277,14 +277,14 @@ def fake_db_command():
     db.session.commit()
     click.echo('Tickets criados com sucesso')
     
-    users_tickets = []
-    for _ticket in Ticket.query:
-        ut = UserTicket()
-        ut.user_id = choice(users).id
-        ut.ticket_id = _ticket.id
-        users_tickets.append(ut)
-    db.session.add_all(users_tickets)
-    db.session.commit()
+    # users_tickets = []
+    # for _ticket in Ticket.query:
+    #     ut = UserTicket()
+    #     ut.user_id = choice(users).id
+    #     ut.ticket_id = _ticket.id
+    #     users_tickets.append(ut)
+    # db.session.add_all(users_tickets)
+    # db.session.commit()
 
     for _ in range(3000):
         _cm = Comment()

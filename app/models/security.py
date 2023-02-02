@@ -1,11 +1,12 @@
 from flask import current_app as app
-from flask_security import UserMixin, RoleMixin
 from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date, datetime
 from sqlalchemy.dialects.postgresql import UUID
-
+from flask_security.models import fsqla_v3 as fsqla
+from flask_security import UserMixin, RoleMixin
+import uuid
 
 
 from app.core.db import db
@@ -19,14 +20,14 @@ roles_users = db.Table('roles_users',
                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
-services_users = db.Table('services_users',
-                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
-                            db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
+# services_users = db.Table('services_users',
+#                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+#                             db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
 group_services_users = db.Table('group_services_users',
                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
                             db.Column('group_service_id', UUID(as_uuid=True), db.ForeignKey('group_service.id')))
 
-class User(UserMixin, BaseModel):
+class User(BaseModel, UserMixin):
     __abstract__ = False
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
     name = db.Column(db.String(512), index=True, nullable=False)
@@ -41,25 +42,30 @@ class User(UserMixin, BaseModel):
     confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
     confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
-    session_token = db.Column(db.String(256), index=True) 
+    # session_token = db.Column(db.String(256), index=True) 
+    current_login_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
+    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=uuid.uuid4)
+    
+
     roles = db.relationship('Role', 
                 secondary=roles_users, 
                 backref=db.backref('users', lazy='dynamic'), 
                 lazy='dynamic')
-    services = db.relationship('Service', 
-                secondary=services_users, 
-                backref=db.backref('users', lazy='dynamic'), 
-                lazy='dynamic')
-    group_services = db.relationship('GroupService', 
-                secondary=group_services_users, 
-                backref=db.backref('group_services', lazy='dynamic'), 
-                lazy='dynamic')
-    sessions = db.relationship('LoginSession', backref='user', lazy='dynamic')
+    # services = db.relationship('Service', 
+    #             secondary=services_users, 
+    #             backref=db.backref('users', lazy='dynamic'), 
+    #             lazy='dynamic')
+    # group_services = db.relationship('GroupService', 
+    #             secondary=group_services_users, 
+    #             backref=db.backref('group_services', lazy='dynamic'), 
+    #             lazy='dynamic')
+    sessions = db.relationship('LoginSession', backref='user', lazy='dynamic', order_by='LoginSession.create_at.desc()')
     sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
     received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
+    # current_login_network = db.relationship('Network', backref=db.backref('current_user_login'), lazy='dynamic', foreign_keys='[User.current_login_network_id]')
 
     def get_id(self):                                                           
-        return str(self.session_token)
+        return str(self.fs_uniquifier)
 
     @property
     def teams_ordered_by_last_message(self):
@@ -114,28 +120,29 @@ class User(UserMixin, BaseModel):
     @property
     def is_temp_password(self):
         return self.temp_password is True
-    @hybrid_property
-    def current_login_ip(self):
-        if self.current_login_network is None:
-            return None
-        return self.current_login_network.ip
+    # @hybrid_property
+    # def current_login_ip(self):
+    #     # print(self.sessions)
+    #     if self.sessions.first() is None:
+    #         return None
+    #     return self.sessions.first().ip
 
 
-    @current_login_ip.setter
-    def current_login_ip(self, ip):
-        from app.models.network import Network
-        network = Network.query.filter(Network.ip == ip).first()
-        if network is None:
-            network = Network()
-            network.ip = ip
-            try:
-                db.session.add(network)
-                db.session.commit()
-            except Exception as e:
-                app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
-                app.logger.error(e)
-                raise Exception('Não foi possível salvar o IP')
-        self.current_login_network_id = network.id
+    # @current_login_ip.setter
+    # def current_login_ip(self, ip):
+    #     from app.models.network import Network
+    #     network = Network.query.filter(Network.ip == ip).first()
+    #     if network is None:
+    #         network = Network()
+    #         network.ip = ip
+    #         try:
+    #             db.session.add(network)
+    #             db.session.commit()
+    #         except Exception as e:
+    #             app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+    #             app.logger.error(e)
+    #             raise Exception('Não foi possível salvar o IP')
+    #     self.current_login_network_id = network.id
         # try:
         #     db.session.commit()
         # except Exception as e:
@@ -210,7 +217,7 @@ class User(UserMixin, BaseModel):
     def query_by_interval(start : date, end: date):
         return User.query.filter(cast(User.created_at, Date) == start, cast(User.created_at, Date) == end)
 
-class Role(RoleMixin, BaseModel):
+class Role(BaseModel, RoleMixin):
     __abstract__ = False
     __metaclass__ = db.Model
     level = db.Column(db.Integer, unique=False, nullable=False)

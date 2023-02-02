@@ -19,6 +19,8 @@ class BaseConfig(object):
     _SQLALCHEMY_DATABASE_PORT = environ.get('DB_PORT')
     _ERRORS = {'DB_COMMIT_ERROR': 'Não foi possível atualizar o banco de dados'}
     SQLALCHEMY_TRACK_MODIFICATIONS=False
+    login_message = 'Você não tem acessos'
+    SECURITY_UNAUTHORIZED_VIEW = '/unauthorized'
 
 class DevelopmentConfig(BaseConfig):
     ENV = 'development'
