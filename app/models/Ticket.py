@@ -9,6 +9,9 @@ from app.utils.datetime import format_elapsed_time
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import event
 from flask import current_app as app
+import pytz
+
+utc = pytz.UTC
 
 
 class Ticket(BaseModel):
@@ -47,7 +50,7 @@ class Ticket(BaseModel):
 
     @property
     def current_stage(self):
-        if self.current_stage != None:
+        if self.current_stage_event != None:
             return self.current_stage_event.stage
         return None
     
@@ -56,6 +59,12 @@ class Ticket(BaseModel):
         return db.session.query(TicketStageEvent)\
             .filter(TicketStageEvent.ticket_id == self.id)\
                 .order_by(TicketStageEvent.create_at.desc()).limit(1).first()
+
+
+    @property
+    def is_out_of_date(self):
+        now = datetime.utcnow()
+        return self.current_stage_event.deadline < utc.localize(now)
 
     @hybrid_property
     def closed(self):
@@ -113,10 +122,10 @@ class TicketStageEvent(BaseModel):
     ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket.id'), nullable=False)
     deadline = db.Column(db.DateTime(timezone=True), nullable=False)
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
-    _closed = db.Column(db.Boolean)
+    _closed = db.Column(db.Boolean, default=False)
     info = db.Column(db.Text)
-    user = db.relationship('User', backref=db.backref('user_stage', lazy='dynamic'))
-    stage = db.relationship('TicketStage', backref=db.backref('events', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('ticket_stage', lazy='dynamic'))
+    stage = db.relationship('TicketStage', primaryjoin='ticket_stage_event.c.ticket_stage_id == ticket_stage.c.id', backref=db.backref('events', lazy='dynamic'))
     user_name = association_proxy('user', 'name')
     stage_name = association_proxy('stage', 'name')
     stage_level = association_proxy('stage', 'level')
@@ -131,7 +140,7 @@ class TicketStageEvent(BaseModel):
         
         self.info = info
     @staticmethod
-    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadilne: datetime, info: Optional[str]=None, close_last: bool=False, force: bool=False):
+    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadline: datetime, info: Optional[str]=None, close_last: bool=False, force: bool=False):
         query = db.session.query(TicketStageEvent).filter(
             TicketStageEvent.ticket_stage_id==ticket_stage.id,
             TicketStageEvent.user_id == user.id,
@@ -144,7 +153,7 @@ class TicketStageEvent(BaseModel):
                 user_id=user.id,
                 ticket_id=ticket.id,
                 ticket_stage_id=ticket_stage.id,
-                deadline=deadilne, 
+                deadline=deadline, 
                 info=info)
         if close_last is True:
             last_event = db.session.query(TicketStageEvent).filter(
@@ -163,7 +172,7 @@ class TicketStageEvent(BaseModel):
 
     @hybrid_property
     def closed(self):
-        return self.closed
+        return self._closed
     
     @closed.setter
     def closed(self, value):

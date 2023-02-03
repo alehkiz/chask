@@ -23,7 +23,7 @@ def index():
 
 @bp.route('/team/<uuid:id>')
 @login_required
-def team(id):
+def team(id:uuid4):
     team = Team.query.filter(Team.id == id).first_or_404()
     session['room'] = team.id
     session['name'] = current_user.name

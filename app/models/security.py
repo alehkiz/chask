@@ -1,3 +1,4 @@
+from typing import Optional
 from flask import current_app as app
 from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
@@ -6,6 +7,7 @@ from datetime import date, datetime
 from sqlalchemy.dialects.postgresql import UUID
 from flask_security.models import fsqla_v3 as fsqla
 from flask_security import UserMixin, RoleMixin
+from flask_sqlalchemy import BaseQuery
 import uuid
 
 
@@ -67,12 +69,7 @@ class User(BaseModel, UserMixin):
     def get_id(self):                                                           
         return str(self.fs_uniquifier)
 
-    @property
-    def teams_ordered_by_last_message(self):
-        from app.models.team import Team
-        from app.models.chat import Message
-        query = db.session.query(Team).join(Team.messages, self.teams).order_by(Message.create_at.desc())
-        return query
+    
 
     @property
     def is_admin(self):
@@ -120,35 +117,34 @@ class User(BaseModel, UserMixin):
     @property
     def is_temp_password(self):
         return self.temp_password is True
-    # @hybrid_property
-    # def current_login_ip(self):
-    #     # print(self.sessions)
-    #     if self.sessions.first() is None:
-    #         return None
-    #     return self.sessions.first().ip
+    @hybrid_property
+    def current_login_ip(self):
+        if self.sessions.first() is None:
+            return None
+        return self.sessions.first().ip
 
 
-    # @current_login_ip.setter
-    # def current_login_ip(self, ip):
-    #     from app.models.network import Network
-    #     network = Network.query.filter(Network.ip == ip).first()
-    #     if network is None:
-    #         network = Network()
-    #         network.ip = ip
-    #         try:
-    #             db.session.add(network)
-    #             db.session.commit()
-    #         except Exception as e:
-    #             app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
-    #             app.logger.error(e)
-    #             raise Exception('Não foi possível salvar o IP')
-    #     self.current_login_network_id = network.id
-        # try:
-        #     db.session.commit()
-        # except Exception as e:
-        #     app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
-        #     app.logger.error(e)
-        #     raise Exception('Não foi possível salvar o IP')
+    @current_login_ip.setter
+    def current_login_ip(self, ip):
+        from app.models.network import Network
+        network = Network.query.filter(Network.ip == ip).first()
+        if network is None:
+            network = Network()
+            network.ip = ip
+            try:
+                db.session.add(network)
+                db.session.commit()
+            except Exception as e:
+                app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+                app.logger.error(e)
+                raise Exception('Não foi possível salvar o IP')
+        self.current_login_network_id = network.id
+        try:
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+            app.logger.error(e)
+            raise Exception('Não foi possível salvar o IP')
 
     
     @hybrid_property
@@ -169,27 +165,44 @@ class User(BaseModel, UserMixin):
         return verify_password(password, self.password)
 
     @property
-    def format_create_date(self):
+    def format_create_date(self) -> str:
         return self.created_at.strftime("%d/%m/%Y")
 
     @property
-    def format_active(self):
+    def format_active(self) -> str:
         return 'Sim' if self.active else 'Não'
 
     @property
-    def questions_liked_count(self):
+    def questions_liked_count(self) -> int:
         return self.question_like.count()
 
     @property
-    def questions_saved_count(self):
+    def questions_saved_count(self) -> int:
         return self.question_save.count()
     
     @property
-    def first_name(self):
+    def first_name(self) -> str:
         return self.name.split()[0]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<User {self.username}>'
+
+
+    ####### QUERIES ##############
+
+    def tickets_datetime_deadline(self, dt:Optional[datetime] = None) -> BaseQuery:
+        from app.models.ticket import TicketStageEvent
+        
+        if dt is None:
+            dt = datetime.now()
+        return db.session.query(TicketStageEvent)\
+            .join(User, TicketStageEvent.user)\
+            .filter(User.id == self.id, TicketStageEvent.deadline < dt, TicketStageEvent.closed != False)
+    
+    def tickets_delay_from_now(self) -> BaseQuery:
+        from app.models.ticket import TicketStageEvent
+        dt = datetime.now()
+        return self.tickets_datetime_deadline(dt)
 
     @property
     def unreaded_messages(self):
@@ -202,7 +215,14 @@ class User(BaseModel, UserMixin):
                                 .subquery()
         count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
         return count_unread
-    
+
+    @property
+    def teams_ordered_by_last_message(self):
+        from app.models.team import Team
+        from app.models.chat import Message
+        query = db.session.query(Team).join(Team.messages, self.teams).order_by(Message.create_at.desc())
+        return query
+
     @staticmethod
     def query_by_month_year(year : int, month : int):
         return User.query.filter(extract('year', User.created_at) == year, extract('month', User.created_at) == month)
