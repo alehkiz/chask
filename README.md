@@ -29,6 +29,10 @@ Um CRM desenvolvido em Flask
         - Pesquisa de satisfação (nota) por email;
         - Dashboard para acompanhamento da resolutividade;
         - Acompanhamento individual (melhoria)
+ - Tickets por funcionarios:
+    - [x] Serão apresentandos os Tickets vencidos;
+    - [] Serão apresentados os tickets que irão vencer no próximo dia;
+    - [] Reentradas ficarão priorizadas com a data da primeira entrada;
  - Segurança:
     - [x] Permitir que um usuários tenha apenas uma seção ativa
 
