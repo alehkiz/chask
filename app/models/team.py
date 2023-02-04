@@ -33,25 +33,33 @@ class Team(BaseModel):
     users = db.relationship(
         'User',
         secondary='user_team',
-        primaryjoin=("user_team.c.team_id==team.c.id"),
-        secondaryjoin=('user_team.c.user_id==user.c.id'),
+        primaryjoin=("user_team.c.team_id==foreign(team.c.id)"),
+        secondaryjoin=('user_team.c.user_id==foreign(user.c.id)'),
         backref=db.backref(
             "teams", lazy='dynamic', #order_by="desc(team_administrators.c.administrator_at)"
         ),
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
     )
+    tickets = db.relationship('Ticket', 
+                secondary='ticket_stage_event', 
+                back_populates='teams',
+                lazy='dynamic',
+                viewonly=True
+                )
+    tickets_stage_event = db.relationship('TicketStageEvent', back_populates='team', viewonly=True)
 
     services = db.relationship('Service', secondary='group_service_team',
-                    primaryjoin='team.c.id==group_service_team.c.team_id',
-                    secondaryjoin='group_service_team.c.id==service.c.group_id',
-                    backref=db.backref("teams", lazy='dynamic'),
-                    lazy='dynamic')
+                    primaryjoin='team.c.id==foreign(group_service_team.c.team_id)',
+                    secondaryjoin='foreign(group_service_team.c.id)==service.c.group_id',
+                    lazy='dynamic',
+                    back_populates="teams",
+                    viewonly=True,
+                    )
     groups = db.relationship('GroupService', secondary='group_service_team',
-                    primaryjoin='foreign(team.c.id)==group_service_team.c.team_id',
-                    secondaryjoin='group_service_team.c.group_id==foreign(group_service.c.id)',
-                    backref=db.backref("teams", lazy='dynamic'),
-                    lazy='dynamic')
+                    lazy='dynamic',
+                    back_populates="teams",
+                    )
     messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
 
     def remove_user(self, user:User) -> None:
@@ -64,6 +72,15 @@ class Team(BaseModel):
                 app.logger.error(e)
                 raise Exception('Não foi possível remover usuário do time')
 
+    def add_user(self, user:User) -> None:
+        if isinstance(user, User):
+            self.users.add(user)
+            try:
+                db.session.commit()
+            except Exception as e:
+                app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+                app.logger.error(e)
+                raise Exception('Não foi possível adicionar usuário ao time')
 
 
     def unreaded_messages(self, user):
@@ -110,7 +127,8 @@ class Team(BaseModel):
             app.logger.error(e)
             raise Exception('Não foi possível adicionar a leitura às mesagens')
         
-
+    def has_user(self, user : User):
+        return user in self.users
 
 class UserTeam(BaseModel):
     __abstract__ = False

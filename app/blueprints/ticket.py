@@ -3,7 +3,7 @@ from flask import Blueprint, abort, redirect, render_template, session, url_for,
 from flask_login import current_user, login_required
 from flask_security import roles_accepted
 from uuid import uuid4
-from app.models.ticket import Ticket, TicketStageEvent
+from app.models.ticket import Ticket, TicketStage, TicketStageEvent
 
 from app.core.db import db
 from app.models.network import Network
@@ -17,14 +17,16 @@ bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 @login_required
 @roles_accepted('support', 'admin')
 def index():
-    return render_template('ticket.html')
+    tickets_events = current_user.tickets_datetime_deadline().order_by(TicketStageEvent.deadline.asc())
+    return render_template('tickets.html', tickets_events=tickets_events)
 
 
 @bp.route('/view/<uuid:id>')
 @login_required
 def view(id:uuid4):
     ticket = Ticket.query.filter(Ticket.id == id).first_or_404()
-    return str(ticket.id)
+    stages = TicketStage.query.order_by(TicketStage.level.asc()).all()
+    return render_template('ticket.html', ticket=ticket, stages=stages)
 
 
 @bp.route('/delayed')
@@ -32,4 +34,4 @@ def view(id:uuid4):
 @roles_accepted('support', 'ticket')
 def delayed():
     tickets_events = current_user.tickets_datetime_deadline().order_by(TicketStageEvent.deadline.asc())
-    return render_template('list_tickets.html', tickets_events=tickets_events)
+    return render_template('tickets.html', tickets_events=tickets_events)

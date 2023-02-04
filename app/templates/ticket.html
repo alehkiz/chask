@@ -4,27 +4,49 @@
 {% block app_content %}
 <section>
 <div class="container">
-    <div class="container text-center">
-        <div class="row align-items-start">
-          <div class="col border border-success rounded p-2 m-2">
-            Total Tickets: <a href="{{url_for('ticket.index')}}">{{current_user.tickets.count()}}</a>
-            <hr>
-            <div class="px-3 py-2 rounded-2 border" style="background-color: var(--bs-danger-bg-subtle); --bs-border-color: var(--bs-danger-border-subtle); color: var(--bs-danger-text);">
-              Tickets Atrasados: <a href="{{url_for('ticket.delayed')}}">{{current_user.tickets_delay_from_now().count()}}</a>
-            </div>
-            
-          </div>
-          <!-- <div class="col border border-success p-2 m-2">
-            One of three columns
-            <div class="px-3 py-2 rounded-2" style="background-color: var(--bs-danger-border-subtle); color: var(--bs-danger-text);">Border subtle</div>
-
-            
-            <hr>
-            teste
-          </div> -->
-        </div>
-      </div>
+    {{ticket.title}}
+    <ul class="nav nav-tabs d-flex flex-row justify-content-start" id="myTab" role="tablist">
+      {% for stage in stages %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-{{stage.level}}" type="button" role="tab" aria-controls="home-tab-pane" {{ 'aria-selected="true"' if ticket.has_stage_on_events(stage) else 'aria-selected="false" disabled'}} >{{stage.name}}</button>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="tab-content" id="myTabContent">
+      {% for stage in stages %}
+      <div class="tab-pane fade text-muted" id="home-tab-{{stage.level}}" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>{{ticket.name}}</span></div>
+      {% endfor %}
+      <!-- <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>teste</span></div>
+      <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">...</div>
+      <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">...</div>
+      <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">...</div> -->
+    </div>
+    
+    
 </div>
+
+
+
+
+
 </section>
+
+
 {% endblock %}
 
+{% block scripts %} {{ super() }}
+<script type="text/javascript">
+  const triggerTabList = document.querySelectorAll('#myTab button')
+  triggerTabList.forEach(triggerEl => {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+  
+    triggerEl.addEventListener('click', event => {
+      event.preventDefault()
+      tabTrigger.show()
+    })
+  })
+  
+
+</script>
+
+{% endblock %}

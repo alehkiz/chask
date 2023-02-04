@@ -5,9 +5,10 @@ from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.models.security import User
+from app.models.team import Team
 from app.utils.datetime import format_elapsed_time
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import event
+from sqlalchemy import ForeignKeyConstraint, PrimaryKeyConstraint, event
 from flask import current_app as app
 import pytz
 
@@ -29,18 +30,23 @@ class Ticket(BaseModel):
     service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
     comments = db.relationship('Comment', backref=db.backref('ticket',  order_by='desc(Comment.create_at)'), lazy='dynamic', order_by='desc(Comment.create_at)')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
-    stage_event = db.relationship('TicketStageEvent',
-                            primaryjoin='ticket_stage_event.c.ticket_id==ticket.c.id',
-                            backref=db.backref('ticket'),
-                            lazy='dynamic')
+    stage_events = db.relationship('TicketStageEvent',
+                back_populates='ticket',
+                lazy='dynamic',
+                viewonly=True)
     users = db.relationship('User', secondary='ticket_stage_event', 
-                primaryjoin=('ticket_stage_event.c.ticket_id==foreign(ticket.c.id)'),#foreign for overlap foreign key
-                secondaryjoin=('ticket_stage_event.c.user_id==foreign(user.c.id)'),
-                backref=db.backref('tickets', lazy='dynamic'), 
-                lazy='dynamic'
+                lazy='dynamic',
+                back_populates='tickets',
+                viewonly=True
                 )
+    teams = db.relationship('Team', secondary='ticket_stage_event', 
+                back_populates='tickets',
+                lazy='dynamic',
+                viewonly=True
+                )
+    service = db.relationship('Service', back_populates='tickets')
 
-    stages =  association_proxy('stage_event', 'stage')
+    stages =  association_proxy('stage_events', 'stage')
 
     @property
     def current_user(self):
@@ -60,6 +66,8 @@ class Ticket(BaseModel):
             .filter(TicketStageEvent.ticket_id == self.id)\
                 .order_by(TicketStageEvent.create_at.desc()).limit(1).first()
 
+    def has_stage_on_events(self, stage) -> bool:
+        return stage in self.stages
 
     @property
     def is_out_of_date(self):
@@ -118,33 +126,48 @@ class TicketStage(BaseModel):
 class TicketStageEvent(BaseModel):
     __abstract__ = False
     ticket_stage_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_stage.id'), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
+    team_id = db.Column(UUID(as_uuid=True), db.ForeignKey('team.id'), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=True)
     ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket.id'), nullable=False)
     deadline = db.Column(db.DateTime(timezone=True), nullable=False)
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     _closed = db.Column(db.Boolean, default=False)
     info = db.Column(db.Text)
-    user = db.relationship('User', backref=db.backref('ticket_stage', lazy='dynamic'))
-    stage = db.relationship('TicketStage', primaryjoin='ticket_stage_event.c.ticket_stage_id == ticket_stage.c.id', backref=db.backref('events', lazy='dynamic'))
+
+    team = db.relationship('Team',back_populates='tickets_stage_event', viewonly=True)
+    ticket = db.relationship('Ticket',back_populates='stage_events', viewonly=True)
+    user = db.relationship('User', back_populates='tickets_stage_event', viewonly=True)
+    stage = db.relationship('TicketStage', primaryjoin='ticket_stage_event.c.ticket_stage_id == ticket_stage.c.id', backref=db.backref('events', lazy='dynamic'), viewonly=True)
     user_name = association_proxy('user', 'name')
     stage_name = association_proxy('stage', 'name')
     stage_level = association_proxy('stage', 'level')
     
-    def __init__(self, ticket_stage_id, user_id, ticket_id, deadline, info=None) -> None:
+    def __init__(self, ticket_stage_id : int, ticket_id : int, team_id: int, deadline : datetime, user_id: Optional[int] = None, info : Optional[str]=None) -> None:
         self.ticket_stage_id = ticket_stage_id
-        self.user_id = user_id
         self.ticket_id = ticket_id
         if deadline < datetime.utcnow():
             raise Exception('Deadline menor que a data/hora atual.')
+        team = Team.query.filter(Team.id == team_id).first()
+        if team is None:
+            raise Exception(f'O time {team_id} não existe')
+        self.team_id = team_id
+        if user_id != None:
+            user = User.query.filter(User.id == user_id).first()
+            if user is None:
+                app.logger.warning(f'Não existe user_id: {user_id}, nenhum usuário adicionada em {self.__class__.__name__}')
+            elif  not team.has_user(user):
+                app.logger.warning(f'O usuário {user.name} não está no {team.name}')
+            else:
+                self.user_id = user_id
         self.deadline = deadline
-        
         self.info = info
     @staticmethod
-    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, deadline: datetime, info: Optional[str]=None, close_last: bool=False, force: bool=False):
+    def add(ticket_stage: TicketStage, user: User, ticket: Ticket, team: Team, deadline: datetime, info: Optional[str]=None, close_last: bool=False, force: bool=False):
         query = db.session.query(TicketStageEvent).filter(
             TicketStageEvent.ticket_stage_id==ticket_stage.id,
             TicketStageEvent.user_id == user.id,
             TicketStageEvent.ticket_id == ticket.id,
+            TicketStageEvent.team_id == team.id
         ).order_by(TicketStageEvent.create_at.desc())#mais recente primeiro
         if query.count() > 0 and force is False:
             raise Exception('Não é possível adicionar o evento, já há um cadastro')
@@ -153,6 +176,7 @@ class TicketStageEvent(BaseModel):
                 user_id=user.id,
                 ticket_id=ticket.id,
                 ticket_stage_id=ticket_stage.id,
+
                 deadline=deadline, 
                 info=info)
         if close_last is True:

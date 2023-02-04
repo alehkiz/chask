@@ -11,6 +11,27 @@ from app.models.security import User, Role
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
+@click.command('init-db')
+@with_appcontext
+def init_db():
+    from app.models import get_class_models
+    for k, v in get_class_models().items():
+        globals()[k] = v # Add all models to globals # Force import
+    db.create_all(app=app)
+    stages = []
+    stages_name = ['Criado', 'Vinculado', 'Em análise', 'Indevido', 'Transferido', 'Finalizado']
+    for idx, name in enumerate(stages_name):
+        ts = TicketStage.query.filter(TicketStage.name == name).first()
+        if ts != None:
+            continue
+        ts = TicketStage()
+        ts.name = name
+        ts.level = idx
+        stages.append(ts)
+    db.session.add_all(stages)
+    db.session.commit()
+    click.echo('Estágios de ticket criados.')
+
 @click.command('fake-db')
 @with_appcontext
 def fake_db_command():

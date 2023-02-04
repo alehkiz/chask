@@ -65,6 +65,8 @@ class User(BaseModel, UserMixin):
     sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
     received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
     # current_login_network = db.relationship('Network', backref=db.backref('current_user_login'), lazy='dynamic', foreign_keys='[User.current_login_network_id]')
+    tickets = db.relationship('Ticket', secondary='ticket_stage_event', back_populates='users')
+    tickets_stage_event = db.relationship('TicketStageEvent', back_populates='user', viewonly=True)
 
     def get_id(self):                                                           
         return str(self.fs_uniquifier)
