@@ -44,6 +44,7 @@ class Ticket(BaseModel):
                 lazy='dynamic',
                 viewonly=True
                 )
+    costumer = db.relationship('Costumer', backref=db.backref('tickets', lazy='dynamic'))
     service = db.relationship('Service', back_populates='tickets')
 
     stages =  association_proxy('stage_events', 'stage')
