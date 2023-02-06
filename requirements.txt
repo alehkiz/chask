@@ -5,7 +5,7 @@ Faker==16.4.0
 Flask==2.2.2
 Flask_Login==0.6.2
 Flask_Migrate==3.0.0
-Flask_Security==3.0.0
+Flask-Security-Too==5.1.0
 Flask_SocketIO==5.3.2
 Flask_SQLAlchemy==2.5.1
 Flask_UUID==0.2
@@ -15,3 +15,4 @@ python_dateutil==2.8.2
 SQLAlchemy==1.4.39
 Werkzeug==2.2.2
 WTForms==2.3.3
+psycopg2==2.9.5
