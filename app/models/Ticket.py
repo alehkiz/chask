@@ -20,7 +20,7 @@ class Ticket(BaseModel):
     name = db.Column(db.String(512), index=True, nullable=False)
     title = db.Column(db.String(512), index=True, nullable=False)
     info = db.Column(db.String(5000), index=True, nullable=False)
-    _closed = db.Column(db.Boolean)
+    _closed = db.Column(db.Boolean, default=False)
     deadline = db.Column(db.DateTime(timezone=True), nullable=False)
     _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
@@ -77,7 +77,7 @@ class Ticket(BaseModel):
 
     @hybrid_property
     def closed(self):
-        return self.closed
+        return self._closed
     
     @closed.setter
     def closed(self, value):

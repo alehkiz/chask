@@ -5,6 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Optional
 from re import match as re_match
 from app.utils.kernel import only_numbers, validate_cpf
+from app.models.ticket import Ticket
 
 class Costumer(BaseModel):
     __abstract__ = False
@@ -25,10 +26,14 @@ class Costumer(BaseModel):
             if validate_cpf(value):
                 self._identifier = only_numbers(value)
 
+    @property
+    def opened_tickets(self):
+        return self.tickets.filter(Ticket._closed != True).count()
     
-
-        
-            
+    @property
+    def closed_tickets(self):
+        return self.tickets.filter(Ticket._closed == True).count()
+    
 
 
 class CostumerIdentifierType(BaseModel):

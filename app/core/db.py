@@ -17,7 +17,7 @@ def init_db():
     from app.models import get_class_models
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
-    db.create_all(app=app)
+    db.create_all()
     stages = []
     stages_name = ['Criado', 'Vinculado', 'Em análise', 'Indevido', 'Transferido', 'Finalizado']
     for idx, name in enumerate(stages_name):
@@ -53,7 +53,7 @@ def fake_db_command():
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
     db.drop_all()
-    db.create_all(app=app)
+    db.create_all()
     click.echo('Banco de dados inicializado...')
     network = Network()
     network.ip = '0.0.0.0'

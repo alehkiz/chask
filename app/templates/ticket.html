@@ -4,7 +4,8 @@
 {% block app_content %}
 <section>
 <div class="container">
-    {{ticket.costumer.name}}
+    <p class="font-weight-bold">{{ticket.costumer.name}}</p> <span class="p-2 mb-1 bg-danger text-white rounded">Tickets Pendentes: {{ticket.costumer.opened_tickets}}</span> <span class="p-2 mb-1 bg-primary text-white rounded">Tickets Concluídos: {{ticket.costumer.closed_tickets}}</span>
+    <hr>
     <ul class="nav nav-tabs d-flex flex-row justify-content-start" id="myTab" role="tablist">
       {% for stage in stages %}
       <li class="nav-item" role="presentation">
