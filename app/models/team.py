@@ -1,11 +1,13 @@
 from typing import Optional
+import uuid
 from sqlalchemy import asc, desc
-from app.models.base import BaseModel
+from app.models.base import BaseModel, str_512
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db import db
 from datetime import datetime
 from flask import current_app as app
 from app.models.chat import Message
+from sqlalchemy.orm import mapped_column, Mapped
 
 from app.models.security import User
 from app.utils.datetime import format_elapsed_time
@@ -18,8 +20,8 @@ team_administrators = db.Table('team_administrators',
 
 class Team(BaseModel):
     __abstract__ = False
-    name = db.Column(db.String(512), index=True, nullable=False)
-    active = db.Column(db.Boolean, default=False)
+    name : Mapped[str_512] = mapped_column(db.String(512), index=True, nullable=False)
+    active : Mapped[bool] = mapped_column(db.Boolean, default=False)
     administrators = db.relationship(
         "User",
         secondary=team_administrators,
@@ -132,8 +134,8 @@ class Team(BaseModel):
 
 class UserTeam(BaseModel):
     __abstract__ = False
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
-    team_id = db.Column(UUID(as_uuid=True), db.ForeignKey("team.id"), nullable=False)
+    user_id = mapped_column(db.ForeignKey("user.id"), nullable=False)
+    team_id : Mapped[uuid.UUID] = mapped_column(db.ForeignKey("team.id"), nullable=False)
 
     
         

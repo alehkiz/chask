@@ -1,14 +1,15 @@
-from app.models.base import BaseModel
+from app.models.base import BaseModel, str_256, str_64
 from app.core.db import db
 from re import match as re_match
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.utils.kernel import only_numbers
+from sqlalchemy.orm import Mapped, mapped_column
 
 class Contact(BaseModel):
     __abstract__ = False
-    email = db.Column(db.String(256), index=True, unique=True, nullable=True)
-    _phone_principal = db.Column(db.String(60), index=True, unique=True, nullable=True)
-    _phone_secondary = db.Column(db.String(60), index=True, unique=True, nullable=True)
+    email : Mapped[str_256] = db.Column(db.String(256), index=True, unique=True, nullable=True)
+    _phone_principal : Mapped[str_64] = db.Column(db.String(60), index=True, unique=True, nullable=True)
+    _phone_secondary : Mapped[str_64] = db.Column(db.String(60), index=True, unique=True, nullable=True)
     costumer = db.relationship('Costumer', backref='contact', lazy='dynamic')
 
     @staticmethod

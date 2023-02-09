@@ -8,12 +8,13 @@ from app.models.base import BaseModel
 from app.models.network import Network
 from app.models.security import User
 from app.utils.datetime import convert_datetime_to_local
-
+from sqlalchemy.orm import Mapped, mapped_column
+import uuid
 
 class Page(BaseModel):
     __abstract__ = False
-    endpoint = db.Column(db.String, unique=True, nullable=False)
-    route = db.Column(db.String, unique=True, nullable=False)
+    endpoint : Mapped[str] = db.Column(unique=True, nullable=False)
+    route : Mapped[str] = db.Column(db.String, unique=True, nullable=False)
     visit = db.relationship('Visit', cascade='all, delete-orphan',
                             single_parent=True, backref='page', lazy='dynamic')
 
@@ -43,9 +44,9 @@ class Page(BaseModel):
 
 class Visit(BaseModel):
     __abstract__ = False
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
-    page_id = db.Column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
-    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    user_id : Mapped[uuid.UUID] = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
+    page_id : Mapped[uuid.UUID] = db.Column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
+    network_id : Mapped[str] = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
 
 
     @staticmethod

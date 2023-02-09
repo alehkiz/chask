@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from app.core.db import db
-from app.models.base import BaseModel
+from app.models.base import BaseModel, str_512, str_32, str_64
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.models.security import User
@@ -11,23 +11,25 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import ForeignKeyConstraint, PrimaryKeyConstraint, event
 from flask import current_app as app
 import pytz
+from sqlalchemy.orm import Mapped, mapped_column
+import uuid
 
 utc = pytz.UTC
 
 
 class Ticket(BaseModel):
     __abstract__ = False
-    name = db.Column(db.String(512), index=True, nullable=False)
-    title = db.Column(db.String(512), index=True, nullable=False)
-    info = db.Column(db.String(5000), index=True, nullable=False)
-    _closed = db.Column(db.Boolean, default=False)
-    deadline = db.Column(db.DateTime(timezone=True), nullable=False)
-    _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
-    type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
-    create_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
-    create_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
-    costumer_id = db.Column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
-    service_id = db.Column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
+    name : Mapped[str_512]  = mapped_column(db.String(512), index=True, nullable=False)
+    title : Mapped[str_512]  = mapped_column(db.String(512), index=True, nullable=False)
+    info : Mapped[str_512]  = mapped_column(db.String(5000), index=True, nullable=False)
+    _closed : Mapped[bool]  = mapped_column(db.Boolean, default=False)
+    deadline : Mapped[datetime]  = mapped_column(db.DateTime(timezone=True), nullable=False)
+    _closed_at : Mapped[bool]  = mapped_column(db.DateTime(timezone=True), nullable=True)
+    type_id : Mapped[uuid.UUID]  = mapped_column(UUID(as_uuid=True), db.ForeignKey('ticket_type.id'), nullable=False)
+    create_network_id : Mapped[uuid.UUID]  = mapped_column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    create_user_id : Mapped[uuid.UUID]  = mapped_column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
+    costumer_id : Mapped[uuid.UUID]  = mapped_column(UUID(as_uuid=True), db.ForeignKey('costumer.id'), nullable=True)#Cidadão pode ficar vazio
+    service_id : Mapped[uuid.UUID]  = mapped_column(UUID(as_uuid=True), db.ForeignKey('service.id'), nullable=False)
     comments = db.relationship('Comment', backref=db.backref('ticket',  order_by='desc(Comment.create_at)'), lazy='dynamic', order_by='desc(Comment.create_at)')
     costumer = db.relationship('Costumer', backref='tickets', uselist=False)
     stage_events = db.relationship('TicketStageEvent',
@@ -115,25 +117,25 @@ class Ticket(BaseModel):
 
 class TicketType(BaseModel):
     __abstract__ = False
-    type = db.Column(db.String(512), index=True, nullable=False, unique=True)
+    type : Mapped[str_512] = mapped_column(index=True, nullable=False, unique=True)
     tickets = db.relationship('Ticket', backref='type', lazy='dynamic', single_parent=True)
 
 
 class TicketStage(BaseModel):
     __abstract__ = False
-    name = db.Column(db.String(28), index=True, nullable=False, unique=True)
-    level = db.Column(db.Integer, nullable=False, unique=True)
+    name : Mapped[str_32] = mapped_column(index=True, nullable=False, unique=True)
+    level = mapped_column(db.Integer, nullable=False, unique=True)
 
 class TicketStageEvent(BaseModel):
     __abstract__ = False
-    ticket_stage_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_stage.id'), nullable=False)
-    team_id = db.Column(UUID(as_uuid=True), db.ForeignKey('team.id'), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=True)
-    ticket_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket.id'), nullable=False)
-    deadline = db.Column(db.DateTime(timezone=True), nullable=False)
-    _closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
-    _closed = db.Column(db.Boolean, default=False)
-    info = db.Column(db.Text)
+    ticket_stage_id : Mapped[uuid.UUID] = mapped_column(db.ForeignKey('ticket_stage.id'), nullable=False)
+    team_id : Mapped[uuid.UUID] = mapped_column(db.ForeignKey('team.id'), nullable=False)
+    user_id : Mapped[uuid.UUID] = mapped_column(db.ForeignKey('user.id'), nullable=True)
+    ticket_id : Mapped[uuid.UUID] = mapped_column( db.ForeignKey('ticket.id'), nullable=False)
+    deadline : Mapped[bool] = mapped_column(nullable=False)
+    _closed_at : Mapped[datetime] = mapped_column(nullable=True)
+    _closed : Mapped[bool] = mapped_column(default=False)
+    info : Mapped[str_64] = mapped_column()
 
     team = db.relationship('Team',back_populates='tickets_stage_event', viewonly=True)
     ticket = db.relationship('Ticket',back_populates='stage_events', viewonly=True)

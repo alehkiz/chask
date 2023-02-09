@@ -4,6 +4,8 @@ from app.models.base import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
+from sqlalchemy.orm import mapped_column, Mapped
+import uuid
 
 # group_users = db.Table(
 #     "group_users",
@@ -12,27 +14,24 @@ from datetime import datetime
 #     db.Column("joined_at", db.DateTime(timezone=True), default=datetime.utcnow),
 # )
 
-readed_messages = db.Table('readed_messages',
-    db.Column('user_id', UUID(as_uuid=True), db.ForeignKey("user.id")),
-    db.Column('message_id', UUID(as_uuid=True), db.ForeignKey("message.id")),
-    db.Column("readed_at", db.DateTime(timezone=True), default=datetime.utcnow)
-    )
+readed_messages = db.Table(
+    "readed_messages",
+    db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("user.id")),
+    db.Column("message_id", UUID(as_uuid=True), db.ForeignKey("message.id")),
+    db.Column("readed_at", db.DateTime(timezone=True), default=datetime.utcnow),
+)
 
 
 class Message(BaseModel):
     __abstract__ = False
-    message = db.Column(db.Text, nullable=False)
-    user_sender_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False
-    )
-    _user_destiny_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"))
-    create_network_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("network.id"), nullable=False
-    )
-    readed = db.Column(db.Boolean, default=False)
-    _private = db.Column(db.Boolean, nullable=False, default=False)
-    message_id = db.Column(UUID(as_uuid=True), db.ForeignKey("message.id"))
-    _team_id = db.Column(UUID(as_uuid=True), db.ForeignKey("team.id"))
+    message: Mapped[str] = mapped_column(db.Text, nullable=False)
+    user_sender_id: Mapped[uuid.UUID] = mapped_column( db.ForeignKey("user.id"), nullable=False)
+    _user_destiny_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("user.id"))
+    create_network_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("network.id"), nullable=False)
+    readed: Mapped[bool] = mapped_column(default=False)
+    _private: Mapped[bool] = mapped_column(nullable=False, default=False)
+    message_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("message.id"))
+    _team_id: Mapped[uuid.UUID] = mapped_column( db.ForeignKey("team.id"))
     replies_to = db.relationship(
         "Message",
         remote_side="Message.id",
@@ -44,11 +43,10 @@ class Message(BaseModel):
     users_readed = db.relationship(
         "User",
         secondary=readed_messages,
-        primaryjoin=('readed_messages.c.message_id==message.c.id'),
-        secondaryjoin=(readed_messages.c.user_id==User.id),
-        backref=db.backref(
-            "readed_messages", lazy='dynamic'
-        ),  lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
+        primaryjoin=("readed_messages.c.message_id==message.c.id"),
+        secondaryjoin=(readed_messages.c.user_id == User.id),
+        backref=db.backref("readed_messages", lazy="dynamic"),
+        lazy="dynamic",  # TODO:Create a way to relationhip is lazy to query `answers`
     )
 
     @hybrid_property
@@ -79,13 +77,13 @@ class Message(BaseModel):
         self._team_id = value
         self._private = False
 
-
-    def user_can_read(self, user: User)-> bool:
+    def user_can_read(self, user: User) -> bool:
         if self.team in user.teams:
             return True
-        if  self.sender == user:
+        if self.sender == user:
             return True
         return False
+
 
 # class GroupChat(BaseModel):
 #     __abstract__ = False
@@ -100,4 +98,3 @@ class Message(BaseModel):
 #         order_by="desc(group_users.c.joined_at)",
 #     )
 #     messages = db.relationship('Message', backref='group', lazy='dynamic')
-

@@ -4,18 +4,20 @@ from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date, datetime
-from sqlalchemy.dialects.postgresql import UUID
 from flask_security.models import fsqla_v3 as fsqla
 from flask_security import UserMixin, RoleMixin
 from flask_sqlalchemy import BaseQuery
+from sqlalchemy.orm import mapped_column, Mapped
 import uuid
+from sqlalchemy.dialects.postgresql import UUID
 
 
 from app.core.db import db
 from app.utils.kernel import validate_password
 from app.utils.datetime import format_elapsed_time
-from app.models.base import BaseModel
+from app.models.base import BaseModel, str_32, str_512, str_128, str_256
 from datetime import datetime
+
 
 
 roles_users = db.Table('roles_users',
@@ -31,22 +33,22 @@ group_services_users = db.Table('group_services_users',
 
 class User(BaseModel, UserMixin):
     __abstract__ = False
-    username = db.Column(db.String(32), index=True, nullable=False, unique=True)
-    name = db.Column(db.String(512), index=True, nullable=False)
-    email = db.Column(db.String(128), index=True, unique=True, nullable=False)
-    _password = db.Column(db.String(512), nullable=False)
-    temp_password = db.Column(db.Boolean, nullable=False, default=True)
-    about_me = db.Column(db.String(512))
-    last_seen = db.Column(db.DateTime(timezone=True), default=datetime.utcnow())
-    location = db.Column(db.String(128), nullable=True)
-    active = db.Column(db.Boolean, default=False)
-    created_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
-    confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
-    confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
-    login_count = db.Column(db.Integer, nullable=True, default=0)
+    username : Mapped[str_32] = db.Column(index=True, nullable=False, unique=True)
+    name : Mapped[str_512] = db.Column(index=True, nullable=False)
+    email : Mapped[str_128] = db.Column(db.String(128), index=True, unique=True, nullable=False)
+    _password : Mapped[str_512] = db.Column(nullable=False)
+    temp_password : Mapped[bool] = db.Column(nullable=False, default=True)
+    about_me : Mapped[str_512] = db.Column()
+    last_seen : Mapped[datetime] = db.Column(db.DateTime(timezone=True), default=datetime.utcnow())
+    location : Mapped[str_128] = db.Column(nullable=True)
+    active : Mapped[bool]  = db.Column(db.Boolean, default=False)
+    created_network_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'), nullable=False)
+    confirmed_network_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'))
+    confirmed_at  : Mapped[datetime] = db.Column(nullable=True)
+    login_count  : Mapped[int] = db.Column(nullable=True, default=0)
     # session_token = db.Column(db.String(256), index=True) 
-    current_login_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
-    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=uuid.uuid4)
+    current_login_network_id  : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'))
+    fs_uniquifier  : Mapped[str_256] = db.Column(unique=True, nullable=False, default=uuid.uuid4)
     
 
     roles = db.relationship('Role', 
@@ -242,9 +244,9 @@ class User(BaseModel, UserMixin):
 class Role(BaseModel, RoleMixin):
     __abstract__ = False
     __metaclass__ = db.Model
-    level = db.Column(db.Integer, unique=False, nullable=False)
-    name = db.Column(db.String(128), nullable=False, unique=True)
-    description = db.Column(db.String(255), nullable=True)
+    level : Mapped[int] = db.Column(db.Integer, unique=False, nullable=False)
+    name : Mapped[str_128] = db.Column(nullable=False, unique=True)
+    description : Mapped[str_256]= db.Column(nullable=True)
 
     @property
     def is_admin(self):
@@ -299,6 +301,6 @@ class Role(BaseModel, RoleMixin):
 
 class LoginSession(BaseModel):
     __abstract__ = False
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'), nullable=False)
-    location = db.Column(db.String(128), nullable=True)
-    network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
+    user_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('user.id'), nullable=False)
+    location : Mapped[str_128]= db.Column(nullable=True)
+    network_id : Mapped[uuid.UUID]= db.Column(db.ForeignKey('network.id'))
