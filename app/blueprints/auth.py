@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import uuid4
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for, g, current_app as app
 from flask_login import login_user, current_user
 from flask_security import logout_user
@@ -20,9 +21,6 @@ def login():
     if login.validate_on_submit():
         user = User.query.filter_by(username=login.username.data).first()
         if user is None or not user.check_password(login.password.data):
-            # print(user.username)
-            # print(user.check_password(login.password.data))
-            print(login.password.data)
             flash('Senha ou usuário inválido', category='danger')
             return render_template('login.html', form=login, title='Login')
         if not user.is_active:
@@ -31,14 +29,18 @@ def login():
         if user.is_temp_password:
             flash('É necessário alterar sua senha', category='warning')
             return redirect(url_for('auth.temp_password'))
-        login_user(user, remember=login.remember_me.data)
         login_session = LoginSession()
         login_session.user_id = user.id
+        user.login_count += 1
+        if session.get('uuid', False) is False:
+            session['uuid'] =  uuid4()
+        user.fs_uniquifier = session['uuid']
         if hasattr(g, 'ip_id'):
             login_session.network_id = g.ip_id
         else:
             return abort(500)
         user.last_seen = datetime.utcnow()
+        login_user(user, remember=login.remember_me.data)
         db.session.add(login_session)
         try:
             db.session.commit()

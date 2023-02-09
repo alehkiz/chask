@@ -57,15 +57,19 @@ def init(app: Flask):
 
     register_blueprints(app)
     @login.user_loader
-    def load_user(id):
-        try:
-            from app.models.security import User
-            user = User.query.get(id)
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
-            app.logger.error(e)
-            return None
-        return user
+    def load_user(session_token):
+        if not session_token is None:
+            try:
+                from app.models.security import User
+                user = User.query.filter_by(fs_uniquifier=session_token).first()
+                if not user is None:
+                    from flask import session
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+                app.logger.error(e)
+                return None
+            return user
+        return None
         
     return app

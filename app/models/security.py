@@ -1,11 +1,14 @@
+from typing import Optional
 from flask import current_app as app
-from flask_security import UserMixin, RoleMixin
 from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date, datetime
 from sqlalchemy.dialects.postgresql import UUID
-
+from flask_security.models import fsqla_v3 as fsqla
+from flask_security import UserMixin, RoleMixin
+from flask_sqlalchemy import BaseQuery
+import uuid
 
 
 from app.core.db import db
@@ -19,7 +22,14 @@ roles_users = db.Table('roles_users',
                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
-class User(UserMixin, BaseModel):
+# services_users = db.Table('services_users',
+#                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+#                             db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
+group_services_users = db.Table('group_services_users',
+                            db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+                            db.Column('group_service_id', UUID(as_uuid=True), db.ForeignKey('group_service.id')))
+
+class User(BaseModel, UserMixin):
     __abstract__ = False
     username = db.Column(db.String(32), index=True, nullable=False, unique=True)
     name = db.Column(db.String(512), index=True, nullable=False)
@@ -34,13 +44,34 @@ class User(UserMixin, BaseModel):
     confirmed_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
     confirmed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     login_count = db.Column(db.Integer, nullable=True, default=0)
+    # session_token = db.Column(db.String(256), index=True) 
+    current_login_network_id = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'))
+    fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False, default=uuid.uuid4)
+    
+
     roles = db.relationship('Role', 
                 secondary=roles_users, 
                 backref=db.backref('users', lazy='dynamic'), 
                 lazy='dynamic')
-    sessions = db.relationship('LoginSession', backref='user', lazy='dynamic')
+    # services = db.relationship('Service', 
+    #             secondary=services_users, 
+    #             backref=db.backref('users', lazy='dynamic'), 
+    #             lazy='dynamic')
+    # group_services = db.relationship('GroupService', 
+    #             secondary=group_services_users, 
+    #             backref=db.backref('group_services', lazy='dynamic'), 
+    #             lazy='dynamic')
+    sessions = db.relationship('LoginSession', backref='user', lazy='dynamic', order_by='LoginSession.create_at.desc()')
     sended_messages = db.relationship('Message', backref=db.backref('sender'), lazy='dynamic', foreign_keys='[Message.user_sender_id]')
     received_messages = db.relationship('Message', backref=db.backref('receiver'), lazy='dynamic', foreign_keys='[Message._user_destiny_id]')
+    # current_login_network = db.relationship('Network', backref=db.backref('current_user_login'), lazy='dynamic', foreign_keys='[User.current_login_network_id]')
+    tickets = db.relationship('Ticket', secondary='ticket_stage_event', back_populates='users', lazy='dynamic')
+    tickets_stage_event = db.relationship('TicketStageEvent', back_populates='user', viewonly=True)
+
+    def get_id(self):                                                           
+        return str(self.fs_uniquifier)
+
+    
 
     @property
     def is_admin(self):
@@ -90,9 +121,9 @@ class User(UserMixin, BaseModel):
         return self.temp_password is True
     @hybrid_property
     def current_login_ip(self):
-        if self.current_login_network is None:
+        if self.sessions.first() is None:
             return None
-        return self.current_login_network.ip
+        return self.sessions.first().ip
 
 
     @current_login_ip.setter
@@ -110,12 +141,12 @@ class User(UserMixin, BaseModel):
                 app.logger.error(e)
                 raise Exception('Não foi possível salvar o IP')
         self.current_login_network_id = network.id
-        # try:
-        #     db.session.commit()
-        # except Exception as e:
-        #     app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
-        #     app.logger.error(e)
-        #     raise Exception('Não foi possível salvar o IP')
+        try:
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(app.config.get('_ERRORS').get('DB_COMMIT_ERROR'))
+            app.logger.error(e)
+            raise Exception('Não foi possível salvar o IP')
 
     
     @hybrid_property
@@ -136,27 +167,44 @@ class User(UserMixin, BaseModel):
         return verify_password(password, self.password)
 
     @property
-    def format_create_date(self):
+    def format_create_date(self) -> str:
         return self.created_at.strftime("%d/%m/%Y")
 
     @property
-    def format_active(self):
+    def format_active(self) -> str:
         return 'Sim' if self.active else 'Não'
 
     @property
-    def questions_liked_count(self):
+    def questions_liked_count(self) -> int:
         return self.question_like.count()
 
     @property
-    def questions_saved_count(self):
+    def questions_saved_count(self) -> int:
         return self.question_save.count()
     
     @property
-    def first_name(self):
+    def first_name(self) -> str:
         return self.name.split()[0]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<User {self.username}>'
+
+
+    ####### QUERIES ##############
+
+    def tickets_datetime_deadline(self, dt:Optional[datetime] = None) -> BaseQuery:
+        from app.models.ticket import TicketStageEvent
+        
+        if dt is None:
+            dt = datetime.now()
+        return db.session.query(TicketStageEvent)\
+            .join(User, TicketStageEvent.user)\
+            .filter(User.id == self.id, TicketStageEvent.deadline < dt, TicketStageEvent.closed != False)
+    
+    def tickets_delay_from_now(self) -> BaseQuery:
+        from app.models.ticket import TicketStageEvent
+        dt = datetime.now()
+        return self.tickets_datetime_deadline(dt)
 
     @property
     def unreaded_messages(self):
@@ -169,7 +217,14 @@ class User(UserMixin, BaseModel):
                                 .subquery()
         count_unread = db.session.query(total_messages.c.cnt - read_msg.c.cnt).scalar()
         return count_unread
-    
+
+    @property
+    def teams_ordered_by_last_message(self):
+        from app.models.team import Team
+        from app.models.chat import Message
+        query = db.session.query(Team).join(Team.messages, self.teams).order_by(Message.create_at.desc())
+        return query
+
     @staticmethod
     def query_by_month_year(year : int, month : int):
         return User.query.filter(extract('year', User.created_at) == year, extract('month', User.created_at) == month)
@@ -184,7 +239,7 @@ class User(UserMixin, BaseModel):
     def query_by_interval(start : date, end: date):
         return User.query.filter(cast(User.created_at, Date) == start, cast(User.created_at, Date) == end)
 
-class Role(RoleMixin, BaseModel):
+class Role(BaseModel, RoleMixin):
     __abstract__ = False
     __metaclass__ = db.Model
     level = db.Column(db.Integer, unique=False, nullable=False)

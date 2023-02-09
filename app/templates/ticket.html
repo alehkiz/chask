@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+
+
+{% block app_content %}
+<section>
+<div class="container">
+    <p class="font-weight-bold">{{ticket.costumer.name}}</p> <span class="p-2 mb-1 bg-danger text-white rounded">Tickets Pendentes: {{ticket.costumer.opened_tickets}}</span> <span class="p-2 mb-1 bg-primary text-white rounded">Tickets Concluídos: {{ticket.costumer.closed_tickets}}</span>
+    <hr>
+    <ul class="nav nav-tabs d-flex flex-row justify-content-start" id="myTab" role="tablist">
+      {% for stage in stages %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-{{stage.level}}" type="button" role="tab" aria-controls="home-tab-pane" {{ 'aria-selected="true"' if ticket.has_stage_on_events(stage) else 'aria-selected="false" disabled'}} >{{stage.name}}</button>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="tab-content" id="myTabContent">
+      {% for stage in stages %}
+      <div class="tab-pane fade text-muted" id="home-tab-{{stage.level}}" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>{{ticket.name}}</span></div>
+      {% endfor %}
+      <!-- <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>teste</span></div>
+      <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">...</div>
+      <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">...</div>
+      <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">...</div> -->
+    </div>
+    
+    
+</div>
+
+
+
+
+
+</section>
+
+
+{% endblock %}
+
+{% block scripts %} {{ super() }}
+<script type="text/javascript">
+  const triggerTabList = document.querySelectorAll('#myTab button')
+  triggerTabList.forEach(triggerEl => {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+  
+    triggerEl.addEventListener('click', event => {
+      event.preventDefault()
+      tabTrigger.show()
+    })
+  })
+  
+
+</script>
+
+{% endblock %}

@@ -24,6 +24,7 @@ class Comment(BaseModel):
         UUID(as_uuid=True), db.ForeignKey('network.id'), nullable = False)
     update_network_id=db.Column(
         UUID(as_uuid=True), db.ForeignKey('network.id'))
+    ticket_stage_event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('ticket_stage_event.id'))
     comment_id = db.Column(UUID(as_uuid=True), db.ForeignKey('comment.id'))
     replies_to = db.relationship(
         'Comment', 
@@ -34,7 +35,8 @@ class Comment(BaseModel):
         )
     user_read_state = db.relationship('User', secondary=comment_read_state,
             backref=db.backref('comments_readed',lazy='dynamic', order_by='desc(comment_read_state.c.create_at)'), lazy='dynamic',order_by='desc(comment_read_state.c.create_at)')
-
+    # ticket = db.relationship('Ticket', backref=db.backref('comments', lazy='dynamic', order_by='desc(comment.create_at)'), lazy='dynamic', order_by='desc(comment.c.create_at)')
+    ticket_events = db.relationship('TicketStageEvent', backref=db.backref('event', lazy='dynamic', order_by='desc(Comment.create_at)'), uselist=False, order_by='desc(Comment.create_at)')
 
     def read_comment(self, user: User) -> None:
         if not user is None and hasattr(user, 'id'):

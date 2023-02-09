@@ -11,6 +11,27 @@ from app.models.security import User, Role
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
+@click.command('init-db')
+@with_appcontext
+def init_db():
+    from app.models import get_class_models
+    for k, v in get_class_models().items():
+        globals()[k] = v # Add all models to globals # Force import
+    db.create_all()
+    stages = []
+    stages_name = ['Criado', 'Vinculado', 'Em análise', 'Indevido', 'Transferido', 'Finalizado']
+    for idx, name in enumerate(stages_name):
+        ts = TicketStage.query.filter(TicketStage.name == name).first()
+        if ts != None:
+            continue
+        ts = TicketStage()
+        ts.name = name
+        ts.level = idx
+        stages.append(ts)
+    db.session.add_all(stages)
+    db.session.commit()
+    click.echo('Estágios de ticket criados.')
+
 @click.command('fake-db')
 @with_appcontext
 def fake_db_command():
@@ -32,7 +53,7 @@ def fake_db_command():
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
     db.drop_all()
-    db.create_all(app=app)
+    db.create_all()
     click.echo('Banco de dados inicializado...')
     network = Network()
     network.ip = '0.0.0.0'
@@ -239,6 +260,28 @@ def fake_db_command():
     db.session.commit()
     click.echo('Clientes criados com sucesso')
 
+    groups_services = []
+    groups = ['Habilitação', 'Veículos']
+    for _g in groups:
+        gs = GroupService()
+        gs.name = _g
+        groups_services.append(gs)
+    db.session.add_all(groups_services)
+    db.session.commit()
+    click.echo('Grupos criados com sucesso')
+
+    services = []
+    for _ in range(50):
+        s = Service()
+        s.group_id = choice(groups_services).id
+        s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        services.append(s)
+
+    db.session.add_all(services)
+    db.session.commit()
+    click.echo('Serviços criados com sucesso')
+
+
     for _ in range(100):
         _ticket = Ticket()
         _ticket.name = faker.text(max_nb_chars=500)
@@ -247,11 +290,22 @@ def fake_db_command():
         _ticket.deadline = faker.date_between_dates(datetime.today(), datetime.today() + timedelta(days=365))
         _ticket.type_id = choice(tickets_type).id
         _ticket.create_network_id = choice(networks).id
+        _ticket.create_user_id = choice(users).id
         _ticket.costumer_id = choice(costumers).id
+        _ticket.service_id = choice(services).id
         tickets.append(_ticket)
     db.session.add_all(tickets)
     db.session.commit()
     click.echo('Tickets criados com sucesso')
+    
+    # users_tickets = []
+    # for _ticket in Ticket.query:
+    #     ut = UserTicket()
+    #     ut.user_id = choice(users).id
+    #     ut.ticket_id = _ticket.id
+    #     users_tickets.append(ut)
+    # db.session.add_all(users_tickets)
+    # db.session.commit()
 
     for _ in range(3000):
         _cm = Comment()

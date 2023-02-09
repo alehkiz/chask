@@ -12,26 +12,39 @@ Um CRM desenvolvido em Flask
 
 ### Funcionalidades:
 
- - Times;
+ - Times:
     - Gerenciamento de times;
     - Dashboard de produtividade;
- - Chats;
+ - Chats:
     - Fase 1: Somente mensagem por texto para tratamento de reclamações, individualizado por times.
- - Fluxo de cada reclamação;
+        - Etapa 1 (enviar e receber mensagems e times) - 100%;
+        - Adionar messagens como lidas. #TODO: Criar a lógica para leitura de mensagens sempre que enviada ao frontend do usuário.
+        -- Criado o modelo de Estágio de Eventos (TicketStageEvent) para cada Ticket no qual cada usuário será responsável pela conclusão da etapa
+ - Fluxo de cada reclamação:
     - A ideia é o acompanhamento do inicio ao fim, incluindo:
+        - Cada reclamação é um ticket, que é separado por etapas, podendo ser concluído em algums pré-definidas.
+        - Para cada etapas um funcionário fica responsável até a conclusão da etapa;
+            - Cada etapa possuí um SLA para resposta;
+        - Alertas sobre  estour do SLA serão emitidos;
         - Pesquisa de satisfação (nota) por email;
         - Dashboard para acompanhamento da resolutividade;
         - Acompanhamento individual (melhoria)
+ - Tickets por funcionarios:
+    - [x] Serão apresentandos os Tickets vencidos;
+    - [] Serão apresentados os tickets que irão vencer no próximo dia;
+    - [] Reentradas ficarão priorizadas com a data da primeira entrada;
+ - Segurança:
+    - [x] Permitir que um usuários tenha apenas uma seção ativa
 
 ### Melhorias futuras:
 
 - [x] frontend principal;
     - [] frontend adminstrador;
     - [] frondend clientes;
-    - [] frontend chat - 20%;
+    - [] frontend chat - 50%;
 - [] Criar rotas;
-- [] Criar sistema de chat - 10%
-- [] Modelos de banco de dados - 70%;
+- [] Criar sistema de chat - 40%
+- [] Modelos de banco de dados - 80%;
 - [] Criar aplicação para gestão de reclamações;
 - [] Camada de administração para:
     - [] Administração de usuários (criação, inativação, atualização);

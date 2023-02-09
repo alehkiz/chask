@@ -1,10 +1,11 @@
 from functools import wraps
 from flask import abort, request, g, current_app as app
 from flask_login import current_user
+from werkzeug.urls import url_parse
 from app.models.network import Network
 from app.models.page import Page
 from app.core.db import db
-
+from flask_socketio import disconnect, emit
 
 def counter(f):
     @wraps(f)
@@ -44,3 +45,19 @@ def counter(f):
             return abort(500)
         return f(*args, **kwargs)
     return decorated_function
+
+
+def url_in_host(url):
+    if url_parse(url).netloc == url_parse(request.base_url).netloc:
+        return True
+    return False
+
+
+def authenticated_only(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if not current_user.is_authenticated:
+            disconnect()
+        else:
+            return f(*args, **kwargs)
+    return wrapped

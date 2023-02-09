@@ -1,0 +1,27 @@
+{% extends 'base/base.html' %}
+
+
+{% block app_content %}
+<section>
+<div class="container">
+    <div class="container text-center">
+        <div class="row align-items-start">
+          <div class="col border border-success rounded p-2 m-2">
+            Total Tickets: <a href="{{url_for('ticket.index')}}">{{current_user.tickets.count()}}</a>
+            <hr>
+            <div class="px-3 py-2 rounded-2 border mb-3" style="background-color: var(--bs-danger-bg-subtle); --bs-border-color: var(--bs-danger-border-subtle); color: var(--bs-danger-text);">
+              Tickets Atrasados: <a href="{{url_for('ticket.delayed')}}">{{current_user.tickets_delay_from_now().count()}}</a>
+            </div>
+            {% if tickets_events %}
+            {% include '_list_tickets.html' %}
+            {% endif %}
+            
+          </div>
+        </div>
+      </div>
+</div>
+</section>
+
+
+{% endblock %}
+

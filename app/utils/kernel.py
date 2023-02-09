@@ -3,7 +3,7 @@ from re import search, sub
 
 from functools import wraps
 from unicodedata import normalize, category
-from werkzeug.urls import url_parse
+
 from flask import request
 
 from flask import url_for, g, session, request
@@ -28,27 +28,6 @@ def validate_password(password):
     # valid_pass['special_char'] = search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is not None
     valid_pass['ok'] = all(valid_pass.values())
     return valid_pass
-
-
-
-def get_list_max_len(l, max_value):
-    '''
-    Recebe uma lista ´l´ a retorna a mesma lista, desde que a quantidade de caracteres da lista não exceda ´max_value´
-    '''
-    if not isinstance(max_value, int) or max_value < 1:
-        return l
-    if sum([len(_) for _ in l]) < max_value:
-        return l
-    _temp_l = []
-    _temp_sum = 0
-    for v in l:
-        _temp_sum += len(v)
-        if _temp_sum > max_value:
-            break
-        _temp_l.append(v)
-    if not _temp_l:
-        return [l[0][0:max_value]]
-    return _temp_l
 
 
 def strip_accents(string:str):
@@ -83,10 +62,7 @@ def only_numbers(string:str) -> str:
         str: string with only numbers
     """    
     return sub("[^0-9]", "", string)
-def url_in_host(url):
-    if url_parse(url).netloc == url_parse(request.base_url).netloc:
-        return True
-    return False
+
 
 
 def order_dict(dictionary: dict, size:int =5, summarize=False,other_key:str='Outros', extra_size:bool=False):

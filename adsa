@@ -1,0 +1,32 @@
+                        ?column?                        
+--------------------------------------------------------
+ drop table if exists network cascade;
+ drop table if exists user cascade;
+ drop table if exists state_location cascade;
+ drop table if exists city cascade;
+ drop table if exists group_service cascade;
+ drop table if exists service cascade;
+ drop table if exists roles_users cascade;
+ drop table if exists role cascade;
+ drop table if exists services_users cascade;
+ drop table if exists group_services_users cascade;
+ drop table if exists login_session cascade;
+ drop table if exists message cascade;
+ drop table if exists team cascade;
+ drop table if exists address_postcode cascade;
+ drop table if exists address cascade;
+ drop table if exists address_type cascade;
+ drop table if exists visit cascade;
+ drop table if exists page cascade;
+ drop table if exists team_administrators cascade;
+ drop table if exists user_team cascade;
+ drop table if exists readed_messages cascade;
+ drop table if exists costumer_identifier_type cascade;
+ drop table if exists costumer cascade;
+ drop table if exists contact cascade;
+ drop table if exists ticket_type cascade;
+ drop table if exists ticket cascade;
+ drop table if exists comment cascade;
+ drop table if exists comment_read_state cascade;
+(28 rows)
+

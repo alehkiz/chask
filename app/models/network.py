@@ -16,4 +16,6 @@ class Network(BaseModel):
     messages_created = db.relationship('Message', backref='creted_network', lazy='dynamic', foreign_keys='[Message.create_network_id]')
     visits = db.relationship('Visit', backref='network', lazy='dynamic', single_parent=True)
     tickets = db.relationship('Ticket', backref='network', lazy='dynamic', single_parent=True)
-    last_login_user = db.relationship('LoginSession', backref='login_network', lazy='dynamic')
+    sessions = db.relationship('LoginSession', backref='network', lazy='dynamic', single_parent=True)
+    # last_login_user = db.relationship('LoginSession', backref='current_login_network', lazy='dynamic', foreign_keys='[User.current_login_network_id]')
+    
