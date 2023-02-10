@@ -224,7 +224,7 @@ class User(BaseModel, UserMixin):
     def teams_ordered_by_last_message(self):
         from app.models.team import Team
         from app.models.chat import Message
-        query = db.session.query(Team).join(Team.messages, self.teams).order_by(Message.create_at.desc())
+        query = db.session.query(Team).join(Team.users).join(Team.messages).filter(User.id == self.id).order_by(Message.create_at.desc())
         return query
 
     @staticmethod

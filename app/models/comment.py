@@ -33,6 +33,7 @@ class Comment(BaseModel):
         backref=db.backref(
             "answers"
         ),  # lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
+        viewonly=True
     )
     user_read_state = db.relationship(
         "User",
@@ -48,9 +49,10 @@ class Comment(BaseModel):
     # ticket = db.relationship('Ticket', backref=db.backref('comments', lazy='dynamic', order_by='desc(comment.create_at)'), lazy='dynamic', order_by='desc(comment.c.create_at)')
     ticket_events = db.relationship(
         "TicketStageEvent",
-        backref=db.backref("event", lazy="dynamic", order_by="desc(Comment.create_at)"),
+        backref=db.backref("comments", lazy="dynamic", order_by="desc(Comment.create_at)"),
         uselist=False,
         order_by="desc(Comment.create_at)",
+        viewonly=True
     )
 
     def read_comment(self, user: User) -> None:

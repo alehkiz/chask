@@ -42,6 +42,7 @@ class Team(BaseModel):
         ),
         lazy='dynamic',
         #order_by="desc(team_administrators.c.administrator_at)",
+        viewonly=True
     )
     tickets = db.relationship('Ticket', 
                 secondary='ticket_stage_event', 
@@ -61,6 +62,7 @@ class Team(BaseModel):
     groups = db.relationship('GroupService', secondary='group_service_team',
                     lazy='dynamic',
                     back_populates="teams",
+                    viewonly=True,
                     )
     messages = db.relationship('Message', backref='team', lazy='dynamic', order_by='asc(Message.create_at)')
 
@@ -100,8 +102,6 @@ class Team(BaseModel):
 
     @property
     def last_message(self):
-        #db.session.query(Team, Message).join(Team.messages, admin.teams).distinct(Team.id).order_by(Team.id, Message.create_at.desc()).all()#Times ordenados por última mensagem
-        # return self.messages.order_by(Message.create_at.desc()).first()
         return db.session.query(Message).filter(Message.team == self).order_by(desc(Message.create_at)).first()
 
     @property

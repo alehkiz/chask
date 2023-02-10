@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, abort, redirect, render_template, session, url_for, request, g, current_app as app
+from flask import Blueprint, abort, flash, redirect, render_template, session, url_for, request, g, current_app as app
 from flask_login import current_user, login_required
 from app.core.extesions import socketio
 from uuid import uuid4
@@ -25,6 +25,9 @@ def index():
 @login_required
 def team(id:uuid4):
     team = Team.query.filter(Team.id == id).first_or_404()
+    if not team.has_user(current_user):
+        flash('Você não participa desse grupo, solicite ao administrador.', category='warning')
+        return redirect(url_for('chat.index'))
     session['room'] = team.id
     session['name'] = current_user.name
     team.add_view_message(current_user)
