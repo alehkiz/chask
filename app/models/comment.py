@@ -18,14 +18,13 @@ comment_read_state = db.Table(
 
 class Comment(BaseModel):
     __abstract__ = False
-    ticket_id: Mapped[uuid.UUID] = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("ticket.id"), nullable=False),
-    user_id: Mapped[uuid.UUID] = db.Column( db.ForeignKey("user.id"), nullable=False),
-    text : Mapped[str] = db.Column(nullable=False)
+    ticket_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("ticket.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("user.id"), nullable=False)
     create_network_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("network.id"), nullable=False)
     update_network_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("network.id"))
     ticket_stage_event_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("ticket_stage_event.id"))
     comment_id: Mapped[uuid.UUID] = db.Column( db.ForeignKey("comment.id"))
+    text : Mapped[str] = db.Column(nullable=False)
     replies_to = db.relationship(
         "Comment",
         remote_side="Comment.id",
@@ -35,6 +34,8 @@ class Comment(BaseModel):
         ),  # lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
         viewonly=True
     )
+    # author = db.relationship('User', primaryjoin='comment.c.user_id==user.c.id')#, backref=db.backref('writed_comments', lazy='dynamic'))
+    # author = db.relationship('User', back_populates='comments_writed',  lazy='dynamic')
     user_read_state = db.relationship(
         "User",
         secondary=comment_read_state,

@@ -7,27 +7,27 @@
     <p class="font-weight-bold">{{ticket.costumer.name}}</p> <span class="p-2 mb-1 bg-danger text-white rounded">Tickets Pendentes: {{ticket.costumer.opened_tickets}}</span> <span class="p-2 mb-1 bg-primary text-white rounded">Tickets Concluídos: {{ticket.costumer.closed_tickets}}</span>
     <hr>
     <ul class="nav nav-tabs d-flex flex-row justify-content-start" id="myTab" role="tablist">
-      {% for stage in stages %}
+      {% for stage, tse in ticket_stage_events.items() %}
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-{{stage.level}}" type="button" role="tab" aria-controls="home-tab-pane" {{ 'aria-selected="true"' if ticket.has_stage_on_events(stage) else 'aria-selected="false" disabled'}} >{{stage.name}}</button>
+        <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-{{stage.level}}" type="button" role="tab" aria-controls="home-tab-pane" {{ 'aria-selected="true"' if tse != False else 'aria-selected="false" disabled'}} >{{stage.name}}</button>
       </li>
       {% endfor %}
     </ul>
     <div class="tab-content mh-80 overflow-auto" style="height: 20rem; background-color: rgba(0,0,255,.1);" id="myTabContent">
       <!-- <div class="d-flex justify-content-center py-2"> -->
-      {% for stage in stages %}
+        {{stages}}
+      {% for stage, tse in ticket_stage_events.items() %}
       <!-- <div class="tab-pane fade text-muted" id="home-tab-{{stage.level}}" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>{{ticket.name}}</span></div> -->
-        {{stage.comments}}
-        {% if stage in ticket.stage_events %}
-        {% for comment in stage.comments %}
-        {{comment}}
+        {% if tse != false %}
+        {% for comment in tse.comments %}
         <div class="comment_on_ticket py-1 my-2 px-2 border rounded"> <span class="text1">{{comment.text}}</span>
             <div class="d-flex justify-content-between py-1 pt-2">
-                <div>{{comment.user.name}}</span></div>
+                <div>{{comment.author.name}}</span></div>
                 <div><span class="text3">Upvote?</span><span class="thumbup"><i class="fa fa-thumbs-o-up"></i></span><span class="text4">3</span></div>
             </div>
         </div>
         {% endfor %}
+        {% endif %}
       {% endfor %}
 
       <!-- </div> -->

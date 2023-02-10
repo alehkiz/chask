@@ -17,6 +17,7 @@ from app.utils.kernel import validate_password
 from app.utils.datetime import format_elapsed_time
 from app.models.base import BaseModel, str_32, str_512, str_128, str_256
 from datetime import datetime
+from typing import List
 
 
 
@@ -69,6 +70,8 @@ class User(BaseModel, UserMixin):
     # current_login_network = db.relationship('Network', backref=db.backref('current_user_login'), lazy='dynamic', foreign_keys='[User.current_login_network_id]')
     tickets = db.relationship('Ticket', secondary='ticket_stage_event', back_populates='users', lazy='dynamic')
     tickets_stage_event = db.relationship('TicketStageEvent', back_populates='user', viewonly=True)
+    # writed_comments = db.relationship("Comment", back_populates="writer", foreign_keys='[Comment.user_id]')
+    comments_writed : Mapped[List["Comment"]] = db.relationship(backref='author', primaryjoin='user.c.id == comment.c.user_id')
 
     def get_id(self):                                                           
         return str(self.fs_uniquifier)

@@ -27,20 +27,15 @@ class Ticket(BaseModel):
         db.DateTime(timezone=True), nullable=False
     )
     _closed_at: Mapped[bool] = mapped_column(db.DateTime(timezone=True), nullable=True)
-    type_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), db.ForeignKey("ticket_type.id"), nullable=False
+    type_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("ticket_type.id"), nullable=False
     )
-    create_network_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), db.ForeignKey("network.id"), nullable=False
+    create_network_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("network.id"), nullable=False
     )
-    create_user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False
+    create_user_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("user.id"), nullable=False
     )
-    costumer_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), db.ForeignKey("costumer.id"), nullable=True
+    costumer_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("costumer.id"), nullable=True
     )  # Cidadão pode ficar vazio
-    service_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), db.ForeignKey("service.id"), nullable=False
+    service_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("service.id"), nullable=False
     )
     comments = db.relationship(
         "Comment",

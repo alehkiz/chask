@@ -1,7 +1,7 @@
 from app.core.db import db
 # from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime, date, time, timedelta
-from uuid import uuid4, UUID
+import uuid
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy import String
 from app.utils.datetime import format_elapsed_time
@@ -30,12 +30,12 @@ class BaseModel(db.Model):
         str: types.String(),
         str_10: types.String(),
         str_64: types.String(),
-        UUID : types.UUID(as_uuid=True),
+        uuid.UUID : types.UUID(as_uuid=True),
         float : types.Float(),
         INET : INET
 
     }
-    id : Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    id : Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     create_at : Mapped[datetime] = mapped_column(default=datetime.utcnow)
     update_at : Mapped[datetime] = mapped_column(onupdate=datetime.utcnow)
 
