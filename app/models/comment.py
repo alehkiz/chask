@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from app.models.base import BaseModel
+from app.models.base import BaseModel,str_256
 from app.core.db import db
 from sqlalchemy.dialects.postgresql import UUID
 from flask import current_app as app
@@ -24,7 +24,7 @@ class Comment(BaseModel):
     update_network_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("network.id"))
     ticket_stage_event_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("ticket_stage_event.id"))
     comment_id: Mapped[uuid.UUID] = db.Column( db.ForeignKey("comment.id"))
-    text : Mapped[str] = db.Column(nullable=False)
+    text : Mapped[str_256] = db.Column(nullable=False)
     replies_to = db.relationship(
         "Comment",
         remote_side="Comment.id",
