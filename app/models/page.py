@@ -13,8 +13,8 @@ import uuid
 
 class Page(BaseModel):
     __abstract__ = False
-    endpoint : Mapped[str] = db.Column(unique=True, nullable=False)
-    route : Mapped[str] = db.Column(db.String, unique=True, nullable=False)
+    endpoint : Mapped[str] = db.mapped_column(unique=True, nullable=False)
+    route : Mapped[str] = db.mapped_column(db.String, unique=True, nullable=False)
     visit = db.relationship('Visit', cascade='all, delete-orphan',
                             single_parent=True, backref='page', lazy='dynamic')
 
@@ -44,9 +44,9 @@ class Page(BaseModel):
 
 class Visit(BaseModel):
     __abstract__ = False
-    user_id : Mapped[uuid.UUID] = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
-    page_id : Mapped[uuid.UUID] = db.Column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
-    network_id : Mapped[str] = db.Column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
+    user_id : Mapped[uuid.UUID] = db.mapped_column(UUID(as_uuid=True), db.ForeignKey('user.id'))
+    page_id : Mapped[uuid.UUID] = db.mapped_column(UUID(as_uuid=True), db.ForeignKey('page.id'), nullable=False)
+    network_id : Mapped[str] = db.mapped_column(UUID(as_uuid=True), db.ForeignKey('network.id'), nullable=False)
 
 
     @staticmethod

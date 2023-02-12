@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 class Network(BaseModel):
     __abstract__ = False
-    ip : Mapped[INET] = db.Column(nullable=False)
-    # created_user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user.id'))
+    ip : Mapped[INET] = db.mapped_column(INET, nullable=False)
+    # created_user_id = db.mapped_column(UUID(as_uuid=True), db.ForeignKey('user.id'))
     created_user = db.relationship('User', backref='created_network', lazy='dynamic', foreign_keys='[User.created_network_id]')
     confirmed_user = db.relationship('User', backref='confirmed_network', lazy='dynamic', foreign_keys='[User.confirmed_network_id]')
     comemnts_created = db.relationship('Comment', backref='created_network', lazy='dynamic', foreign_keys='[Comment.create_network_id]')

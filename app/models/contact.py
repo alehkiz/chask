@@ -7,9 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 class Contact(BaseModel):
     __abstract__ = False
-    email : Mapped[str_256] = db.Column(db.String(256), index=True, unique=True, nullable=True)
-    _phone_principal : Mapped[str_64] = db.Column(db.String(60), index=True, unique=True, nullable=True)
-    _phone_secondary : Mapped[str_64] = db.Column(db.String(60), index=True, unique=True, nullable=True)
+    email : Mapped[str_256] = db.mapped_column(db.String(256), index=True, unique=True, nullable=True)
+    _phone_principal : Mapped[str_64] = db.mapped_column(db.String(60), index=True, unique=True, nullable=True)
+    _phone_secondary : Mapped[str_64] = db.mapped_column(db.String(60), index=True, unique=True, nullable=True)
     costumer = db.relationship('Costumer', backref='contact', lazy='dynamic')
 
     @staticmethod

@@ -9,9 +9,9 @@ import uuid
 
 # group_users = db.Table(
 #     "group_users",
-#     db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("user.id")),
-#     db.Column("group_id", UUID(as_uuid=True), db.ForeignKey("chat_chat.id")),
-#     db.Column("joined_at", db.DateTime(timezone=True), default=datetime.utcnow),
+#     db.mapped_column("user_id", UUID(as_uuid=True), db.ForeignKey("user.id")),
+#     db.mapped_column("group_id", UUID(as_uuid=True), db.ForeignKey("chat_chat.id")),
+#     db.mapped_column("joined_at", db.DateTime(timezone=True), default=datetime.utcnow),
 # )
 
 readed_messages = db.Table(
@@ -87,7 +87,7 @@ class Message(BaseModel):
 
 # class GroupChat(BaseModel):
 #     __abstract__ = False
-#     name = db.Column(db.String(100), nullable=False, unique=True)
+#     name = db.mapped_column(db.String(100), nullable=False, unique=True)
 #     users = db.relationship(
 #         "User",
 #         secondary=group_users,

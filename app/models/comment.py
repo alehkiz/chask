@@ -18,13 +18,13 @@ comment_read_state = db.Table(
 
 class Comment(BaseModel):
     __abstract__ = False
-    ticket_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("ticket.id"), nullable=False)
-    user_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("user.id"), nullable=False)
-    create_network_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("network.id"), nullable=False)
-    update_network_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("network.id"))
-    ticket_stage_event_id: Mapped[uuid.UUID] = db.Column(db.ForeignKey("ticket_stage_event.id"))
-    comment_id: Mapped[uuid.UUID] = db.Column( db.ForeignKey("comment.id"))
-    text : Mapped[str_256] = db.Column(nullable=False)
+    ticket_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("ticket.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("user.id"), nullable=False)
+    create_network_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("network.id"), nullable=False)
+    update_network_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("network.id"))
+    ticket_stage_event_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("ticket_stage_event.id"))
+    comment_id: Mapped[uuid.UUID] = db.mapped_column( db.ForeignKey("comment.id"))
+    text : Mapped[str_256] = db.mapped_column(nullable=False)
     replies_to = db.relationship(
         "Comment",
         remote_side="Comment.id",

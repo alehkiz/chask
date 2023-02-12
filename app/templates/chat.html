@@ -91,14 +91,33 @@
 {% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="//cdn.socket.io/4.4.1/socket.io.min.js"></script>
+<!-- <script src="{{url_for('static', filename='js/chat.js')}}"></script> -->
+<!-- <script type="text/javascript" src="//cdn.socket.io/4.4.1/socket.io.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
   var socket;
   $(document).ready(function(){
-      socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+      //socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+      socket = io();
       socket.on('connect', function() {
-          socket.emit('joined', {});
-      });
+        socket.emit('my_event', {data: 'I\'m connected!'});
+    });
+
+    socket.on('my_response', function(msg, cb) {
+      console.log(msg)
+      $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+      if (cb)
+          cb();
+  });
+
+    var ping_pong_times = [];
+            var start_time;
+            window.setInterval(function() {
+                start_time = (new Date).getTime();
+                $('#transport').text(socket.io.engine.transport.name);
+                socket.emit('my_ping');
+                console.log(start_time)
+            }, 1000);
       socket.on('status', function(data) {
         console.log(data)
           $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
@@ -141,7 +160,7 @@
           if (code == 13) {
             text = $('#message-text').val();
             $('#message-text').val('');
-            socket.emit('text', {msg: text});
+            socket.emit('my_event', {msg: text});
             console.log(code)
           }
       });

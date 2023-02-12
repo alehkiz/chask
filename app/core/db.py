@@ -52,6 +52,7 @@ def fake_db_command():
     faker = Faker(locale='pt_BR')
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
+    from app.models.base import BaseRole
     db.drop_all()
     db.create_all()
     click.echo('Banco de dados inicializado...')
@@ -80,17 +81,26 @@ def fake_db_command():
     click.echo(f'TicketType criados: \nReclamação: {reclamacao.id} \nPedido: {pedido.id}')
     roles = []
     admin = Role()
-    admin.name = "admin"
-    admin.level = 0
+    admin.name = BaseRole.ADMIN
     roles.append(admin)
     local_admin = Role()
-    local_admin.name = 'local_admin'
-    local_admin.level = 1
+    local_admin.name = BaseRole.LOCAL_ADMIN
     roles.append(local_admin)
     support = Role()
-    support.name = 'support'
-    support.level = 3
+    support.name = BaseRole.SUPPORT
     roles.append(support)
+    manager_users = Role()
+    manager_users.name = BaseRole.MANAGER_USER
+    roles.append(manager_users)
+    user_role = Role()
+    user_role.name = BaseRole.USER
+    roles.append(user_role)
+    report = Role()
+    report.name = BaseRole.REPORTS
+    roles.append(report)
+    costumer = Role()
+    costumer.name = BaseRole.COSTUMER
+    roles.append(costumer)
     db.session.add_all(roles)
     db.session.commit()
     click.echo(f'Roles criadas')

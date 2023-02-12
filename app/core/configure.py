@@ -9,6 +9,7 @@ from os import mkdir
 
 from app.blueprints import register_blueprints
 from app.core.extesions import csrf, login, migrate, security, socketio, uuid
+
 # from app.models.network import Network
 # from app.models.page import Page, Visit
 
@@ -23,6 +24,7 @@ login.login_message = 'Faça login para acessar a página'
 login.login_message_category = 'danger'
 for k, v in get_class_models().items():
     globals()[k] = v # Add all models to globals # Force import, to initialize app
+async_mode = None
 
 def init(app: Flask):
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
@@ -31,9 +33,8 @@ def init(app: Flask):
     csrf.init_app(app)
     login.init_app(app)
     login.session_protection = 'strong'
-    socketio.init_app(app)
     uuid.init_app(app)
-
+    socketio.init_app(app)
     @app.shell_context_processor
     @with_appcontext
     def shell_context():

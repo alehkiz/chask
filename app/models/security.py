@@ -11,14 +11,13 @@ from sqlalchemy.orm import mapped_column, Mapped
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-
 from app.core.db import db
 from app.utils.kernel import validate_password
 from app.utils.datetime import format_elapsed_time
-from app.models.base import BaseModel, str_32, str_512, str_128, str_256
+from app.models.base import BaseModel, str_32, str_512, str_128, str_256, BaseRole
 from datetime import datetime
 from typing import List
-
+from sqlalchemy.schema import Sequence
 
 
 roles_users = db.Table('roles_users',
@@ -26,30 +25,30 @@ roles_users = db.Table('roles_users',
                             db.Column('role_id', UUID(as_uuid=True), db.ForeignKey('role.id')))
 
 # services_users = db.Table('services_users',
-#                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
-#                             db.Column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
+#                             db.mapped_column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
+#                             db.mapped_column('service_id', UUID(as_uuid=True), db.ForeignKey('service.id')))
 group_services_users = db.Table('group_services_users',
                             db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id')),
                             db.Column('group_service_id', UUID(as_uuid=True), db.ForeignKey('group_service.id')))
 
 class User(BaseModel, UserMixin):
     __abstract__ = False
-    username : Mapped[str_32] = db.Column(index=True, nullable=False, unique=True)
-    name : Mapped[str_512] = db.Column(index=True, nullable=False)
-    email : Mapped[str_128] = db.Column(db.String(128), index=True, unique=True, nullable=False)
-    _password : Mapped[str_512] = db.Column(nullable=False)
-    temp_password : Mapped[bool] = db.Column(nullable=False, default=True)
-    about_me : Mapped[str_512] = db.Column()
-    last_seen : Mapped[datetime] = db.Column(db.DateTime(timezone=True), default=datetime.utcnow())
-    location : Mapped[str_128] = db.Column(nullable=True)
-    active : Mapped[bool]  = db.Column(db.Boolean, default=False)
-    created_network_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'), nullable=False)
-    confirmed_network_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'))
-    confirmed_at  : Mapped[datetime] = db.Column(nullable=True)
-    login_count  : Mapped[int] = db.Column(nullable=True, default=0)
-    # session_token = db.Column(db.String(256), index=True) 
-    current_login_network_id  : Mapped[uuid.UUID] = db.Column(db.ForeignKey('network.id'))
-    fs_uniquifier  : Mapped[str_256] = db.Column(unique=True, nullable=False, default=uuid.uuid4)
+    username : Mapped[str_32] = db.mapped_column(index=True, nullable=False, unique=True)
+    name : Mapped[str_512] = db.mapped_column(index=True, nullable=False)
+    email : Mapped[str_128] = db.mapped_column(db.String(128), index=True, unique=True, nullable=False)
+    _password : Mapped[str_512] = db.mapped_column(nullable=False)
+    temp_password : Mapped[bool] = db.mapped_column(nullable=False, default=True)
+    about_me : Mapped[str_512] = db.mapped_column()
+    last_seen : Mapped[datetime] = db.mapped_column(db.DateTime(timezone=True), default=datetime.utcnow())
+    location : Mapped[str_128] = db.mapped_column(nullable=True)
+    active : Mapped[bool]  = db.mapped_column(db.Boolean, default=False)
+    created_network_id : Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey('network.id'), nullable=False)
+    confirmed_network_id : Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey('network.id'))
+    confirmed_at  : Mapped[datetime] = db.mapped_column(nullable=True)
+    login_count  : Mapped[int] = db.mapped_column(nullable=True, default=0)
+    # session_token = db.mapped_column(db.String(256), index=True) 
+    current_login_network_id  : Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey('network.id'))
+    fs_uniquifier  : Mapped[str_256] = db.mapped_column(unique=True, nullable=False, default=uuid.uuid4)
     
 
     roles = db.relationship('Role', 
@@ -247,63 +246,39 @@ class User(BaseModel, UserMixin):
 class Role(BaseModel, RoleMixin):
     __abstract__ = False
     __metaclass__ = db.Model
-    level : Mapped[int] = db.Column(db.Integer, unique=False, nullable=False)
-    name : Mapped[str_128] = db.Column(nullable=False, unique=True)
-    description : Mapped[str_256]= db.Column(nullable=True)
+    name : Mapped[BaseRole] = db.mapped_column(unique=False, nullable=False)
+    level : Mapped[int] = db.mapped_column(Sequence('role_level_seq', start=1, increment=1), nullable=False, unique=True, autoincrement=True)
+    description : Mapped[str_256]= db.mapped_column(nullable=True)
 
     @property
     def is_admin(self):
-        if self.level == 0:
+        if self.level == BaseRole.ADMIN:
             return True
         return False
     
     @property
     def is_manager_user(self):
-        if self.level == 1:
+        if self.level == BaseRole.MANAGER_USER:
             return True
         return False
 
-    @property
-    def is_editor(self):
-        if self.level == 2:
-            return True
-        return False
-
-    @property
-    def is_aux_editor(self):
-        if self.level == 3:
-            return True
-        return False
-    
     @property
     def is_support(self):
-        if self.level in [0, 1 ,2, 3, 4]:
+        if self.level in BaseRole.SUPPORT:
             return True
         return False
     @property
     def has_support(self):
-        if self.level in [0,2,3,4,5]:
-            return True
-        return False
-
-    @property
-    def is_viewer(self):
-        if self.level == 5:
-            return True
-        return False
-
-    @property
-    def can_edit(self):
-        if self.level in [0, 2, 3]:
+        if self.level in [BaseRole.SUPPORT, BaseRole.MANAGER_USER, BaseRole.ADMIN]:
             return True
         return False
 
     def __repr__(self):
-        return f'<Role {self.name}>'
+        return f'<Role {self.name.name}>'
 
 
 class LoginSession(BaseModel):
     __abstract__ = False
-    user_id : Mapped[uuid.UUID] = db.Column(db.ForeignKey('user.id'), nullable=False)
-    location : Mapped[str_128]= db.Column(nullable=True)
-    network_id : Mapped[uuid.UUID]= db.Column(db.ForeignKey('network.id'))
+    user_id : Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey('user.id'), nullable=False)
+    location : Mapped[str_128]= db.mapped_column(nullable=True)
+    network_id : Mapped[uuid.UUID]= db.mapped_column(db.ForeignKey('network.id'))

@@ -18,14 +18,14 @@ from app.models.ticket import Ticket, TicketStage, TicketStageEvent
 from app.core.db import db
 from app.models.network import Network
 from app.models.team import Team
-
+from app.models.base import BaseRole
 bp = Blueprint("ticket", __name__, url_prefix="/ticket")
 
 
 @bp.route("/")
 @bp.route("/index")
 @login_required
-@roles_accepted("support", "admin")
+@roles_accepted(BaseRole.SUPPORT, BaseRole.ADMIN)
 def index():
     tickets_events = current_user.tickets_datetime_deadline().order_by(
         TicketStageEvent.deadline.asc()
@@ -54,7 +54,7 @@ def view(id: uuid4):
 
 @bp.route("/delayed")
 @login_required
-@roles_accepted("support", "ticket")
+@roles_accepted(BaseRole.SUPPORT, BaseRole.ADMIN)
 def delayed():
     tickets_events = current_user.tickets_datetime_deadline().order_by(
         TicketStageEvent.deadline.asc()
