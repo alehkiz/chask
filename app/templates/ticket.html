@@ -15,13 +15,14 @@
     </ul>
     <div class="tab-content mh-80 overflow-auto" style="height: 20rem; background-color: rgba(0,0,255,.1);" id="myTabContent">
       <!-- <div class="d-flex justify-content-center py-2"> -->
-        {{stages}}
+        <!-- {{ticket_stage_events}} -->
       {% for stage, tse in ticket_stage_events.items() %}
       <!-- <div class="tab-pane fade text-muted" id="home-tab-{{stage.level}}" role="tabpanel" aria-labelledby="home-tab" tabindex="0"><span>{{ticket.name}}</span></div> -->
-        {% if tse != false %}
+ 
+      {% if tse != false %}
         {% for comment in tse.comments %}
-        <div class="comment_on_ticket py-1 my-2 px-2 border rounded"> <span class="text1">{{comment.text}}</span>
-            <div class="d-flex justify-content-between py-1 pt-2">
+        <div class="comment_on_ticket mw-80 mx-2 px-2 mt-2 border rounded"> <span class="text1">{{comment.text}}</span>
+            <div class="d-flex justify-content-between pt-2">
                 <div>{{comment.author.name}}</span></div>
                 <div><span class="text3">Upvote?</span><span class="thumbup"><i class="fa fa-thumbs-o-up"></i></span><span class="text4">3</span></div>
             </div>
