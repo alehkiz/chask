@@ -34,7 +34,7 @@ def init(app: Flask):
     login.init_app(app)
     login.session_protection = 'strong'
     uuid.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(app, async_mode=async_mode)
     @app.shell_context_processor
     @with_appcontext
     def shell_context():

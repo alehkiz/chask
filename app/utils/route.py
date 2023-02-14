@@ -57,7 +57,7 @@ def authenticated_only(f):
     # print(f"User {current_user.name} autenticado: {current_user.is_authenticated}")
     @wraps(f)
     def wrapped(*args, **kwargs):
-        print(f"User {current_user.name} autenticado: {current_user.is_authenticated}")
+        # print(f"User {current_user.name} autenticado: {current_user.is_authenticated}")
         if not current_user.is_authenticated:
             disconnect()
         else:

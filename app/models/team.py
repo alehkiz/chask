@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 import uuid
 from sqlalchemy import asc, desc
 from app.models.base import BaseModel, str_512
@@ -102,7 +102,10 @@ class Team(BaseModel):
 
     @property
     def last_message(self):
-        return db.session.query(Message).filter(Message.team == self).order_by(desc(Message.create_at)).first()
+        return db.session.query(Message).filter(Message._team_id == self.id).order_by(desc(Message.create_at)).first()
+
+    def last_messages(self, limit : int =10) -> Any:
+        return db.session.query(Message).join(Team.messages).order_by(Message.create_at.desc()).filter(Team.id == self.id).limit(limit)
 
     @property
     def time_last_message(self):
