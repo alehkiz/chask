@@ -52,6 +52,7 @@ def fake_db_command():
     faker = Faker(locale='pt_BR')
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
+    from app.models.base import BaseRole
     db.drop_all()
     db.create_all()
     click.echo('Banco de dados inicializado...')
@@ -67,6 +68,7 @@ def fake_db_command():
     user.active = True
     user.temp_password = False
     user.created_network_id = network.id
+    user.confirmed_network_id = network.id
     db.session.add(user)
     db.session.commit()
     click.echo(f'Administrador criado com sucesso id: {user.id}')
@@ -80,17 +82,26 @@ def fake_db_command():
     click.echo(f'TicketType criados: \nReclamação: {reclamacao.id} \nPedido: {pedido.id}')
     roles = []
     admin = Role()
-    admin.name = "admin"
-    admin.level = 0
+    admin.name = BaseRole.ADMIN
     roles.append(admin)
     local_admin = Role()
-    local_admin.name = 'local_admin'
-    local_admin.level = 1
+    local_admin.name = BaseRole.LOCAL_ADMIN
     roles.append(local_admin)
     support = Role()
-    support.name = 'support'
-    support.level = 3
+    support.name = BaseRole.SUPPORT
     roles.append(support)
+    manager_users = Role()
+    manager_users.name = BaseRole.MANAGER_USER
+    roles.append(manager_users)
+    user_role = Role()
+    user_role.name = BaseRole.USER
+    roles.append(user_role)
+    report = Role()
+    report.name = BaseRole.REPORTS
+    roles.append(report)
+    costumer = Role()
+    costumer.name = BaseRole.COSTUMER
+    roles.append(costumer)
     db.session.add_all(roles)
     db.session.commit()
     click.echo(f'Roles criadas')
@@ -136,6 +147,7 @@ def fake_db_command():
         _user.active = True
         _user.temp_password = False
         _user.created_network_id = choice(networks).id
+        _user.confirmed_network_id = choice(networks).id
         _user.roles.append(choice(roles))
         users.append(_user)
     db.session.add_all(users)
@@ -235,11 +247,16 @@ def fake_db_command():
     db.session.commit()
     click.echo('Códigos postais criados com sucesso')
     
-
+    emails = []
     for _ in range(100):
         contact = Contact()
         contact.phone_principal = faker.cellphone_number()
         contact.phone_secondary = faker.cellphone_number()
+        email = faker.email()
+        while email in emails:
+            email = faker.email()
+        emails.append(email)
+        contact.email = email
         contacts.append(contact)
 
     db.session.add_all(contacts)
@@ -271,10 +288,14 @@ def fake_db_command():
     click.echo('Grupos criados com sucesso')
 
     services = []
+    services_name = []
     for _ in range(50):
         s = Service()
         s.group_id = choice(groups_services).id
         s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        while s.name in services_name:
+            s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        services_name.append(s.name)
         services.append(s)
 
     db.session.add_all(services)

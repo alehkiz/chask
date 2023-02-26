@@ -52,7 +52,7 @@
         </div></div>
         <ul class="list-unstyled messages-container">
           {% if team is defined %}
-          {% for message in team.messages.limit(10) %}
+          {% for message in team.last_messages(20)[::-1] %}
           <li class="d-flex justify-content-between mb-4">
             <img src="{{url_for('static', filename='images/profile.png')}}" alt="avatar"
               class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
@@ -73,12 +73,14 @@
           {% endif %}
         </ul>
         <ul class="list-unstyled">
+          <form id="send-message" method="post" action="#">
           <li class="bg-white mb-3">
             <div class="form-outline">
               <textarea class="form-control" id="message-text" rows="4"></textarea>
             </div>
           </li>
-          <button type="button" class="btn btn-info btn-rounded float-end">Send</button>
+          <input type="submit" class="btn btn-info btn-rounded float-end" value="Enviar">
+        </form>
         </ul>
       </div>
       {% endif %}
@@ -90,15 +92,37 @@
 
 {% block scripts %}
 {{ super() }}
-<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="//cdn.socket.io/4.4.1/socket.io.min.js"></script>
-<script type="text/javascript" charset="utf-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
+<!-- <script type="text/javascript" src="//cdn.socket.io/4.4.1/socket.io.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+<script src="{{url_for('static', filename='js/chat.js')}}"></script>
+
+
+{#<script type="text/javascript" charset="utf-8">
   var socket;
   $(document).ready(function(){
-      socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+      //socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+      var socket = io();
       socket.on('connect', function() {
-          socket.emit('joined', {});
-      });
+        socket.emit('my_event', {data: 'I\'m connected!'});
+        console.log("Conectado")
+    });
+
+    socket.on('my_response', function(msg, cb) {
+      $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data).html());
+      if (cb)
+          cb();
+  });
+
+    var ping_pong_times = [];
+            var start_time;
+            window.setInterval(function() {
+                start_time = (new Date).getTime();
+                $('#transport').text(socket.io.engine.transport.name);
+                socket.emit('my_ping');
+                console.log(start_time)
+            }, 1000);
       socket.on('status', function(data) {
         console.log(data)
           $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
@@ -141,7 +165,7 @@
           if (code == 13) {
             text = $('#message-text').val();
             $('#message-text').val('');
-            socket.emit('text', {msg: text});
+            socket.emit('my_event', {msg: text});
             console.log(code)
           }
       });
@@ -155,5 +179,5 @@
       });
   }
 </script>
-
+#}
 {% endblock %}
