@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime as dt, timedelta
 from typing import List, Optional
 from app.core.db import db
 from app.models.base import BaseModel, str_512, str_32, str_64
@@ -18,11 +18,12 @@ from sqlalchemy.schema import Sequence
 utc = pytz.UTC
 
 
-
 class ExceptionMessages:
-    TICKET_STAGE_SEQUENCE = 'Não é possível fazer essa ação, o estágio que está sendo adicionado não é subsequente ao existente no ticket'
+    TICKET_STAGE_SEQUENCE = "Não é possível fazer essa ação, o estágio que está sendo adicionado não é subsequente ao existente no ticket"
     TRY_CHANGE_CLOSED_DATETIME = "Não é possível incluir ou alterar a data do fechamento por closed_at, altere o atributo closed"
-    FUTURE_DEADLINE = 'Deadline menor que a data/hora atual.'
+    FUTURE_DEADLINE = "Deadline menor que a data/hora atual."
+    TICKET_STAGE_EMPTY = "Os estágios de ticket estão vazios"
+
 
 class Ticket(BaseModel):
     __abstract__ = False
@@ -30,12 +31,12 @@ class Ticket(BaseModel):
     title: Mapped[str_512] = mapped_column(db.String(512), index=True)
     info: Mapped[str_512] = mapped_column(db.String(5000), index=True)
     _closed: Mapped[bool] = mapped_column(db.Boolean, default=False)
-    deadline: Mapped[datetime] = mapped_column(db.DateTime(timezone=True))
+    deadline: Mapped[dt] = mapped_column(db.DateTime(timezone=True))
     _closed_at: Mapped[bool] = mapped_column(db.DateTime(timezone=True), nullable=True)
     type_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("ticket_type.id"))
     create_network_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("network.id"))
     create_user_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("user.id"))
-    costumer_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    costumer_id: Mapped[uuid.UUID] = mapped_column(
         db.ForeignKey("costumer.id")
     )  # Citizen is not nullable
     service_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("service.id"))
@@ -109,8 +110,10 @@ class Ticket(BaseModel):
 
     @property
     def is_out_of_date(self):
-        now = datetime.utcnow()
-        return self.current_stage_event.deadline < utc.localize(now)
+        now = dt.utcnow()
+        if self.current_stage_event is None:
+            return False
+        return self.current_stage_event.deadline < now
 
     @hybrid_property
     def closed(self):
@@ -121,7 +124,7 @@ class Ticket(BaseModel):
         match value:
             case True:
                 self._closed = True
-                self.closed_at = datetime.utcnow()
+                self.closed_at = dt.utcnow()
             case False:
                 self._closed = False
 
@@ -138,9 +141,7 @@ class Ticket(BaseModel):
 
     @closed.setter
     def closed_at(self, value):
-        raise Exception(
-            ExceptionMessages.TRY_CHANGE_CLOSED_DATETIME
-        )
+        raise Exception(ExceptionMessages.TRY_CHANGE_CLOSED_DATETIME)
 
     @property
     def closed_at_elapsed(self):
@@ -149,15 +150,28 @@ class Ticket(BaseModel):
     @property
     def deadline_elapsed(self):
         return format_elapsed_time(self.deadline)
-    
 
-    def add_stage(self, ticket_stage: 'TicketStage',
+    def add_stage(
+        self,
+        ticket_stage: "TicketStage",
         user: User,
-        team: Team,
-        deadline: datetime,
-        info: Optional[str] = None) -> 'TicketStageEvent':
+        team: Optional[Team] = None,
+        deadline: Optional[dt] = None,
+        info: Optional[str] = None,
+        closed : Optional[bool] = False
+    ) -> "TicketStageEvent":
         
-        return TicketStageEvent(ticket_stage=ticket_stage, ticket=self, team=team, deadline=deadline, user=user, info=info)
+        if deadline is None:
+            deadline = dt.now + timedelta(days=7)
+        return TicketStageEvent(
+            ticket_stage=ticket_stage,
+            ticket=self,
+            team=team,
+            deadline=deadline,
+            user=user,
+            info=info,
+            closed=closed
+        )
 
 
 class TicketType(BaseModel):
@@ -183,11 +197,11 @@ class TicketStageEvent(BaseModel):
     ticket_stage_id: Mapped[uuid.UUID] = mapped_column(
         db.ForeignKey("ticket_stage.id"), nullable=False
     )
-    team_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("team.id"))
+    team_id: Mapped[Optional[uuid.UUID]] = mapped_column(db.ForeignKey("team.id"))
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(db.ForeignKey("user.id"))
     ticket_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("ticket.id"))
-    deadline: Mapped[datetime]
-    _closed_at: Mapped[datetime]
+    deadline: Mapped[Optional[dt]]
+    _closed_at: Mapped[Optional[dt]]
     _closed: Mapped[bool] = mapped_column(default=False)
     info: Mapped[str_64]
 
@@ -213,33 +227,36 @@ class TicketStageEvent(BaseModel):
         self,
         ticket_stage: TicketStage,
         ticket: Ticket,
-        team: Team,
-        deadline: datetime,
+        deadline: Optional[dt] = None,
+        team: Optional[Team] = None,
         user: Optional[User] = None,
         info: Optional[str] = None,
+        last_event : Optional['TicketStageEvent'] = None,
+        closed: Optional[bool] = False,
     ) -> None:
-        if not ticket_stage.level == ticket.last_stage.level + 1:
-            raise Exception(ExceptionMessages.TICKET_STAGE_SEQUENCE)
-        self.ticket_stage_id = ticket_stage.id
-        self.ticket_id = ticket.id
-        if deadline < datetime.utcnow():
+        if isinstance(team, Team):
+            self.team_id = team.id
+        if deadline < dt.utcnow():
             raise Exception(ExceptionMessages.FUTURE_DEADLINE)
-        self.team_id = team.id
-        if user != None:
+        if isinstance(user, User):
             if not team.has_user(user):
                 app.logger.warning(f"O usuário {user.name} não está no {team.name}")
             else:
                 self.user_id = user.id
+        self.ticket_stage_id = ticket_stage.id
+        self.ticket_id = ticket.id
         self.deadline = deadline
         self.info = info
-        ticket.last_stage.closed = True
-        try:
-            db.session.add(self)
-            db.session.commit()
-        except Exception as e:
-            app.logger.error(app.config.get("_ERRORS").get("DB_COMMIT_ERROR"))
-            app.logger.error(e)
-            raise Exception("Não foi possível salvar TicketStageEvent")
+        self.closed = closed
+        if isinstance(last_event, TicketStageEvent):
+            ticket.last_stage.closed = True
+        # try:
+        #     db.session.add(self)
+        #     db.session.commit()
+        # except Exception as e:
+        #     app.logger.error(app.config.get("_ERRORS").get("DB_COMMIT_ERROR"))
+        #     app.logger.error(e)
+        #     raise Exception("Não foi possível salvar TicketStageEvent")
 
     @staticmethod
     def add(
@@ -247,7 +264,7 @@ class TicketStageEvent(BaseModel):
         user: User,
         ticket: Ticket,
         team: Team,
-        deadline: datetime,
+        deadline: dt,
         info: Optional[str] = None,
         close_last: bool = False,
         force: bool = False,
@@ -303,7 +320,7 @@ class TicketStageEvent(BaseModel):
         match value:
             case True:
                 self._closed = True
-                self._closed_at = datetime.utcnow()
+                self._closed_at = dt.utcnow()
             case False:
                 self._closed = False
 
@@ -320,9 +337,7 @@ class TicketStageEvent(BaseModel):
 
     @closed.setter
     def closed_at(self, value):
-        raise Exception(
-            ExceptionMessages.TRY_CHANGE_CLOSED_DATETIME
-        )
+        raise Exception(ExceptionMessages.TRY_CHANGE_CLOSED_DATETIME)
 
     @property
     def closed_at_elapsed(self):
@@ -336,3 +351,16 @@ class TicketStageEvent(BaseModel):
 # @event.listens_for(TicketStage.collection, 'append', propagate=True)
 # def my_append_listener(target, value, initiator):
 #     print("received append event for target: %s" % target)
+@event.listens_for(Ticket, "after_insert")
+def receive_after_create(mapper, connection, target):
+    from flask_login import current_user
+    deadline = dt.today() + timedelta(days=7)
+    ts = TicketStage.query.filter(TicketStage.level == 0).first()
+    if ts is None:
+        raise Exception(ExceptionMessages.TICKET_STAGE_EMPTY)
+    tse = target.add_stage(ticket_stage=ts, user=current_user, deadline=deadline, info='', closed=True)
+    @event.listens_for(db.session, "after_flush", once=True)
+    def after_flush(session, context):
+        session.add(tse)
+        # session.commit()
+    # db.session.commit()

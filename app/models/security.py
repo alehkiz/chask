@@ -3,7 +3,7 @@ from flask import current_app as app
 from flask_security.utils import hash_password, verify_password
 from sqlalchemy import cast, extract, Date
 from sqlalchemy.ext.hybrid import hybrid_property
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from flask_security.models import fsqla_v3 as fsqla
 from flask_security import UserMixin, RoleMixin
 from flask_sqlalchemy import BaseQuery
@@ -42,9 +42,7 @@ class User(BaseModel, UserMixin):
     __abstract__ = False
     username: Mapped[str_32] = db.mapped_column(index=True, unique=True)
     name: Mapped[str_512] = db.mapped_column(index=True)
-    email: Mapped[str_128] = db.mapped_column(
-        db.String(128), index=True, unique=True
-    )
+    email: Mapped[str_128] = db.mapped_column(db.String(128), index=True, unique=True)
     _password: Mapped[str_512]
     temp_password: Mapped[bool] = db.mapped_column(nullable=False, default=True)
     about_me: Mapped[Optional[str_512]]
@@ -65,9 +63,7 @@ class User(BaseModel, UserMixin):
     current_login_network_id: Mapped[Optional[uuid.UUID]] = db.mapped_column(
         db.ForeignKey("network.id")
     )
-    fs_uniquifier: Mapped[str_256] = db.mapped_column(
-        unique=True, default=uuid.uuid4
-    )
+    fs_uniquifier: Mapped[str_256] = db.mapped_column(unique=True, default=uuid.uuid4)
 
     roles: Mapped[List["Role"]] = db.relationship(
         secondary=roles_users,
@@ -233,14 +229,12 @@ class User(BaseModel, UserMixin):
         from app.models.ticket import TicketStageEvent
 
         if dt is None:
-            dt = datetime.now()
+            dt = (datetime.now() + timedelta(days=7))
         return (
             db.session.query(TicketStageEvent)
-            .join(User, TicketStageEvent.user)
+            # .join(User, TicketStageEvent.user)
             .filter(
-                User.id == self.id,
-                TicketStageEvent.deadline < dt,
-                TicketStageEvent.closed != False,
+                TicketStageEvent.deadline < dt
             )
         )
 
@@ -313,7 +307,7 @@ class Role(BaseModel, RoleMixin):
     level: Mapped[int] = db.mapped_column(
         Sequence("role_level_seq", start=1, increment=1),
         unique=True,
-        autoincrement=True
+        autoincrement=True,
     )
     description: Mapped[Optional[str_256]]
 

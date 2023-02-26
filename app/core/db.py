@@ -17,6 +17,8 @@ def init_db():
     from app.models import get_class_models
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
+    
+    db.drop_all()
     db.create_all()
     stages = []
     stages_name = ['Criado', 'Vinculado', 'Em análise', 'Indevido', 'Transferido', 'Finalizado']
@@ -53,8 +55,8 @@ def fake_db_command():
     for k, v in get_class_models().items():
         globals()[k] = v # Add all models to globals # Force import
     from app.models.base import BaseRole
-    db.drop_all()
-    db.create_all()
+    # db.drop_all()
+    # db.create_all()
     click.echo('Banco de dados inicializado...')
     network = Network()
     network.ip = '0.0.0.0'
@@ -102,6 +104,7 @@ def fake_db_command():
     costumer = Role()
     costumer.name = BaseRole.COSTUMER
     roles.append(costumer)
+    user.roles.append(admin)
     db.session.add_all(roles)
     db.session.commit()
     click.echo(f'Roles criadas')
@@ -364,6 +367,7 @@ def fake_db_command():
     # db.session.commit()
     # click.echo('Grupos criados com sucesso')
     teams = []
+    
     for _ in range(200):
         t =Team()
         t.name = faker.text(max_nb_chars=randint(20,30))
@@ -371,7 +375,14 @@ def fake_db_command():
         teams.append(t)
     db.session.add_all(teams)
     db.session.commit()
-
+    user_teams = []
+    for team in Team.query:
+        ut = UserTeam()
+        ut.user_id = user.id
+        ut.team_id = t.id
+        user_teams.append(ut)
+    db.session.add_all(user_teams)
+    db.session.commit()
     for _ in range(1000):
         ms = Message()
         ms.message = faker.text(max_nb_chars=randint(50,999))
