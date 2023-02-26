@@ -1,3 +1,4 @@
+from typing import Optional
 from app.core.db import db
 # from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime, date, time, timedelta
@@ -56,8 +57,8 @@ class BaseModel(db.Model):
 
     }
     id : Mapped[uuid.UUID] = db.mapped_column(primary_key=True, default=uuid.uuid4)
-    create_at : Mapped[datetime] = db.mapped_column(nullable=False, default=datetime.utcnow)
-    update_at : Mapped[datetime] = db.mapped_column(nullable=True, onupdate=datetime.utcnow)
+    create_at : Mapped[datetime] = db.mapped_column(default=datetime.utcnow)
+    update_at : Mapped[Optional[datetime]] = db.mapped_column(onupdate=datetime.utcnow)
 
     @property
     def created_at_elapsed(self):

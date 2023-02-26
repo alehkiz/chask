@@ -2,7 +2,7 @@ from app.core.db import db
 from app.models.base import BaseModel, str_1028, str_128, str_32
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from typing import Optional
+from typing import List, Optional
 from re import match as re_match
 from app.utils.kernel import only_numbers, validate_cpf
 from app.models.ticket import Ticket
@@ -40,6 +40,6 @@ class Costumer(BaseModel):
 class CostumerIdentifierType(BaseModel):
     __abstract__ = False
     type : Mapped[str_128] = mapped_column(db.String(128), index=True, unique=True, nullable=False)#CPF/CNPJ
-    clients = db.relationship('Costumer', backref='identifier_type', lazy='dynamic')
+    clients : Mapped[List['Costumer']]= db.relationship(backref='identifier_type', lazy='dynamic')
 
 

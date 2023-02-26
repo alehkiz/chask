@@ -1,3 +1,4 @@
+from typing import List, Optional
 from app.models.security import User
 from app.core.db import db
 from app.models.base import BaseModel
@@ -24,24 +25,22 @@ readed_messages = db.Table(
 
 class Message(BaseModel):
     __abstract__ = False
-    message: Mapped[str] = mapped_column(db.Text, nullable=False)
-    user_sender_id: Mapped[uuid.UUID] = mapped_column( db.ForeignKey("user.id"), nullable=False)
-    _user_destiny_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("user.id"))
-    create_network_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("network.id"), nullable=False)
+    message: Mapped[str] = mapped_column(db.Text)
+    user_sender_id: Mapped[uuid.UUID] = mapped_column( db.ForeignKey("user.id"))
+    user_destiny_id: Mapped[Optional[uuid.UUID]] = mapped_column(db.ForeignKey("user.id"))
+    create_network_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("network.id"))
     readed: Mapped[bool] = mapped_column(default=False)
-    _private: Mapped[bool] = mapped_column(nullable=False, default=False)
-    message_id: Mapped[uuid.UUID] = mapped_column(db.ForeignKey("message.id"))
-    _team_id: Mapped[uuid.UUID] = mapped_column( db.ForeignKey("team.id"))
-    replies_to = db.relationship(
-        "Message",
+    # _private: Mapped[bool] = mapped_column(default=False)
+    message_id: Mapped[Optional[uuid.UUID]] = mapped_column(db.ForeignKey("message.id"))
+    team_id: Mapped[Optional[uuid.UUID]] = mapped_column(db.ForeignKey("team.id"))
+    replies_to : Mapped[List['Message']] = db.relationship(
         remote_side="Message.id",
         primaryjoin=("message.c.id==message.c.message_id"),
         backref=db.backref(
             "answers"
         ),  # lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
     )
-    users_readed = db.relationship(
-        "User",
+    users_readed : Mapped[List['User']] = db.relationship(
         secondary=readed_messages,
         primaryjoin=("readed_messages.c.message_id==message.c.id"),
         secondaryjoin=(readed_messages.c.user_id == User.id),
@@ -58,24 +57,6 @@ class Message(BaseModel):
         raise Exception(
             "Não é possível setar a mensagem como privada, informe o usuário de destino para isso"
         )
-
-    @hybrid_property
-    def user_destiny_id(self) -> None:
-        return self._user_destiny_id
-
-    @user_destiny_id.setter
-    def user_destiny_id(self, value: UUID) -> None:
-        self._user_destiny_id = value
-        self._private = True
-
-    @hybrid_property
-    def team_id(self) -> UUID:
-        return self._team_id
-
-    @team_id.setter
-    def team_id(self, value):
-        self._team_id = value
-        self._private = False
 
     def user_can_read(self, user: User) -> bool:
         if self.team in user.teams:

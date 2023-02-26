@@ -68,6 +68,7 @@ def fake_db_command():
     user.active = True
     user.temp_password = False
     user.created_network_id = network.id
+    user.confirmed_network_id = network.id
     db.session.add(user)
     db.session.commit()
     click.echo(f'Administrador criado com sucesso id: {user.id}')
@@ -146,6 +147,7 @@ def fake_db_command():
         _user.active = True
         _user.temp_password = False
         _user.created_network_id = choice(networks).id
+        _user.confirmed_network_id = choice(networks).id
         _user.roles.append(choice(roles))
         users.append(_user)
     db.session.add_all(users)
@@ -245,11 +247,16 @@ def fake_db_command():
     db.session.commit()
     click.echo('Códigos postais criados com sucesso')
     
-
+    emails = []
     for _ in range(100):
         contact = Contact()
         contact.phone_principal = faker.cellphone_number()
         contact.phone_secondary = faker.cellphone_number()
+        email = faker.email()
+        while email in emails:
+            email = faker.email()
+        emails.append(email)
+        contact.email = email
         contacts.append(contact)
 
     db.session.add_all(contacts)
@@ -281,10 +288,14 @@ def fake_db_command():
     click.echo('Grupos criados com sucesso')
 
     services = []
+    services_name = []
     for _ in range(50):
         s = Service()
         s.group_id = choice(groups_services).id
         s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        while s.name in services_name:
+            s.name = faker.text(max_nb_chars=20).replace('.','').replace(' ', '')
+        services_name.append(s.name)
         services.append(s)
 
     db.session.add_all(services)

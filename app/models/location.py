@@ -2,7 +2,7 @@ from app.core.db import db
 from app.models.base import BaseModel,str_128, str_10, str_256, str_64
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_property
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy.orm import mapped_column, Mapped
 import uuid
 
@@ -18,7 +18,7 @@ class Address(BaseModel):
     _number : Mapped[int] = db.mapped_column(nullable=True, default=0)
     city_id : Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey('city.id'), nullable=False)
 
-    costumers = db.relationship('Costumer', backref='address', lazy='dynamic')
+    costumers : Mapped[List['Costumer']] = db.relationship(backref='address', lazy='dynamic')
 
     @hybrid_property
     def number(self) -> Optional[int]:
@@ -33,7 +33,7 @@ class Address(BaseModel):
 class AddressPostcode(BaseModel):
     __abstract__ = False
     _code : Mapped[str_10] = db.mapped_column(index=True, nullable=False, unique=True)#CEP
-    adresses = db.relationship('Address', backref='code', lazy='dynamic')
+    adresses : Mapped[List['Address']]= db.relationship(backref='code', lazy='dynamic')
 
     @hybrid_property
     def code(self):
@@ -54,16 +54,16 @@ class AddressPostcode(BaseModel):
 class AddressType(BaseModel):
     __abstract__ = False
     type : Mapped[str] = db.mapped_column(db.String(32), index=True, nullable=False, unique=True)
-    adresses = db.relationship('Address', backref='type', lazy='dynamic')
+    adresses : Mapped[List['Address']]= db.relationship(backref='type', lazy='dynamic')
 
 class City(BaseModel):
     __abstract__ = False
     city : Mapped[str_256] = db.mapped_column(db.String(256), index=True, nullable=False, unique=False)
     uf_id : Mapped[uuid.UUID] = db.mapped_column(UUID(as_uuid=True), db.ForeignKey('state_location.id'), nullable=False)#rua, avenida, estrada
-    adresses = db.relationship('Address', backref='city', lazy='dynamic')
+    adresses : Mapped[List['Address']]= db.relationship(backref='city', lazy='dynamic')
 
 class StateLocation(BaseModel):
     __abstract__ = False
     state : Mapped[str_64] = db.mapped_column(index=True, nullable=False, unique=True)
     uf : Mapped[str] = db.mapped_column(index=True, nullable=False, unique=True)
-    cities = db.relationship('City', backref='state', lazy='dynamic')
+    cities : Mapped[List['City']]= db.relationship(backref='state', lazy='dynamic')

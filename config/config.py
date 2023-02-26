@@ -21,6 +21,7 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS=False
     login_message = 'Você não tem acessos'
     SECURITY_UNAUTHORIZED_VIEW = '/unauthorized'
+    STAGES = ['Criado', 'Vinculado', 'Em análise', 'Indevido', 'Transferido', 'Finalizado']
 
 class DevelopmentConfig(BaseConfig):
     ENV = 'development'

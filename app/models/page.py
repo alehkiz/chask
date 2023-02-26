@@ -1,3 +1,4 @@
+from typing import List
 from flask import current_app as app, flash
 from datetime import date, datetime
 
@@ -15,7 +16,8 @@ class Page(BaseModel):
     __abstract__ = False
     endpoint : Mapped[str] = db.mapped_column(unique=True, nullable=False)
     route : Mapped[str] = db.mapped_column(db.String, unique=True, nullable=False)
-    visit = db.relationship('Visit', cascade='all, delete-orphan',
+    visit : Mapped[List['Visit']]= db.relationship(
+        # cascade='all, delete-orphan',
                             single_parent=True, backref='page', lazy='dynamic')
 
     def add_view(self, user_id, network_id):

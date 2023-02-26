@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from app.models.base import BaseModel,str_256
+from typing import List, Optional
+from app.models.base import BaseModel, str_256
 from app.core.db import db
 from sqlalchemy.dialects.postgresql import UUID
 from flask import current_app as app
@@ -18,26 +18,34 @@ comment_read_state = db.Table(
 
 class Comment(BaseModel):
     __abstract__ = False
-    ticket_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("ticket.id"), nullable=False)
-    user_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("user.id"), nullable=False)
-    create_network_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("network.id"), nullable=False)
-    update_network_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("network.id"))
-    ticket_stage_event_id: Mapped[uuid.UUID] = db.mapped_column(db.ForeignKey("ticket_stage_event.id"))
-    comment_id: Mapped[uuid.UUID] = db.mapped_column( db.ForeignKey("comment.id"))
-    text : Mapped[str_256] = db.mapped_column(nullable=False)
-    replies_to = db.relationship(
-        "Comment",
+    ticket_id: Mapped[uuid.UUID] = db.mapped_column(
+        db.ForeignKey("ticket.id")
+    )
+    user_id: Mapped[uuid.UUID] = db.mapped_column(
+        db.ForeignKey("user.id")
+    )
+    create_network_id: Mapped[uuid.UUID] = db.mapped_column(
+        db.ForeignKey("network.id")
+    )
+    update_network_id: Mapped[Optional[uuid.UUID]] = db.mapped_column(db.ForeignKey("network.id"))
+    ticket_stage_event_id: Mapped[Optional[uuid.UUID]] = db.mapped_column(
+        db.ForeignKey("ticket_stage_event.id")
+    )
+    comment_id: Mapped[Optional[uuid.UUID]] = db.mapped_column(
+        db.ForeignKey("comment.id")
+    )
+    text: Mapped[str_256]
+    replies_to: Mapped[List["Comment"]] = db.relationship(
         remote_side="Comment.id",
         primaryjoin=("comment.c.id==comment.c.comment_id"),
         backref=db.backref(
             "answers"
         ),  # lazy='dynamic' #TODO:Create a way to relationhip is lazy to query `answers`
-        viewonly=True
+        viewonly=True,
     )
     # author = db.relationship('User', primaryjoin='comment.c.user_id==user.c.id')#, backref=db.backref('writed_comments', lazy='dynamic'))
     # author = db.relationship('User', back_populates='comments_writed',  lazy='dynamic')
-    user_read_state = db.relationship(
-        "User",
+    user_read_state: Mapped[List["User"]] = db.relationship(
         secondary=comment_read_state,
         backref=db.backref(
             "comments_readed",
@@ -48,12 +56,13 @@ class Comment(BaseModel):
         order_by="desc(comment_read_state.c.create_at)",
     )
     # ticket = db.relationship('Ticket', backref=db.backref('comments', lazy='dynamic', order_by='desc(comment.create_at)'), lazy='dynamic', order_by='desc(comment.c.create_at)')
-    ticket_events = db.relationship(
-        "TicketStageEvent",
-        backref=db.backref("comments", lazy="dynamic", order_by="desc(Comment.create_at)"),
+    ticket_event: Mapped["TicketStageEvent"] = db.relationship(
+        backref=db.backref(
+            "comments", lazy="dynamic", order_by="desc(Comment.create_at)"
+        ),
         uselist=False,
         order_by="desc(Comment.create_at)",
-        viewonly=True
+        viewonly=True,
     )
 
     def read_comment(self, user: User) -> None:
