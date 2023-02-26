@@ -229,13 +229,12 @@ class User(BaseModel, UserMixin):
         from app.models.ticket import TicketStageEvent
 
         if dt is None:
-            dt = (datetime.now() + timedelta(days=7))
+            dt = (datetime.now() + timedelta(days=30))
         return (
             db.session.query(TicketStageEvent)
-            # .join(User, TicketStageEvent.user)
             .filter(
                 TicketStageEvent.deadline < dt
-            )
+            ).order_by(TicketStageEvent.deadline.desc())
         )
 
     def tickets_delay_from_now(self) -> BaseQuery:
